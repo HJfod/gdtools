@@ -5,6 +5,7 @@ public class DefaultStyle {
         TitlebarBG          = "#205e84",
         Text                = "#ffffff",
         TextDark            = "#aaaaaa",
-        Light               = "#4f5176"
+        Light               = "#464952",
+        TabHome             = "#fa70a6"
     };
 }

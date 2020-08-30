@@ -55,10 +55,6 @@ namespace gdtools {
             Main.BackColor = Style.Colors.BG;
             Main.Location = new Point(this.SidebarSize, 0);
 
-            Label txt = new Label();
-            txt.Text = "wow";
-            Main.Controls.Add(txt);
-
             Panel Sidebar = new Panel();
             Sidebar.Size = new Size(this.SidebarSize, Base.Height);
             Sidebar.Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left);
@@ -66,6 +62,7 @@ namespace gdtools {
             Sidebar.Location = new Point(0, 0);
 
             this.TabList = new {
+                Home = new Pages.Home(),
                 Settings = new Pages.Settings()
             };
 
@@ -74,7 +71,9 @@ namespace gdtools {
                 Pages.Page i = pi.GetValue(TabList);
 
                 Elements.TabButton tab = new Elements.TabButton(Sidebar.Width, i._Name, null, i._Color, ix);
-                if (ix == TabList.GetType().GetProperties().Length) tab.Top = ix * Style.TabSize; else {
+                if (ix < TabList.GetType().GetProperties().Length - 1) {
+                    tab.Top = ix * Style.TabSize;
+                } else {
                     tab.Top = Sidebar.Height - Style.TabSize;
                     tab.Anchor = ( AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right );
                 }

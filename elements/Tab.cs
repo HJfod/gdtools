@@ -10,6 +10,7 @@ namespace gdtools {
             private Color _Side = Style.Colors.TitlebarBG;
             private Color _Current;
             private Color _CurrentSide;
+            private Color _Select;
             public int _ID;
             public bool _Selected = false;
 
@@ -33,6 +34,7 @@ namespace gdtools {
 
                 this._Current = this._BG;
                 this._CurrentSide = this._Hover;
+                this._Select = Style.Colors.Light;
                 this.Invalidate();
 
                 this.MouseEnter += (object s, EventArgs e) => {
@@ -47,7 +49,7 @@ namespace gdtools {
 
             protected override void OnPaint(PaintEventArgs e) {
                 base.OnPaint(e);
-                using (Brush b = new SolidBrush(this._Selected ? this._Side : this._Current)) {
+                using (Brush b = new SolidBrush(this._Selected ? this._Select : this._Current)) {
                     e.Graphics.FillRectangle(b, this.ClientRectangle);
                     e.Graphics.FillRectangle(new SolidBrush(this._CurrentSide), new Rectangle(0, 0, Style.TabSideSize, this.ClientRectangle.Height));
                     TextRenderer.DrawText(
