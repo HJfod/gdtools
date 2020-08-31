@@ -44,7 +44,7 @@ namespace gdtools {
             Panel Base = new Panel();
             Base.Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Left);
             Base.AutoSize = true;
-            Base.Size = new Size(ClientSize.Width - 64, ClientSize.Height - Style.TitlebarSize);
+            Base.Size = new Size(ClientSize.Width - 64, ClientSize.Height - Style.TitlebarSize - 65);
             Base.Location = new Point(0, Style.TitlebarSize);
             Base.BackColor = Style.Colors.BG;
 
@@ -57,6 +57,7 @@ namespace gdtools {
 
             Panel Sidebar = new Panel();
             Sidebar.Size = new Size(this.SidebarSize, Base.Height);
+            Sidebar.AutoSize = true;
             Sidebar.Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left);
             Sidebar.BackColor = Style.Colors.BGDark;
             Sidebar.Location = new Point(0, 0);
