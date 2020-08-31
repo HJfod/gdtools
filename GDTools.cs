@@ -15,8 +15,8 @@ namespace gdtools {
             InitializeComponent();
         }
 
-        public int SidebarSize = 150;
-        public int SidebarMaxSize = 350;
+        public int SidebarSize = (int)(150F * Style.Scale);
+        public int SidebarMaxSize = (int)(350F * Style.Scale);
         public int SidebarMinSize = 100;
         public int SelectedTab = 0;
 
@@ -44,7 +44,7 @@ namespace gdtools {
             Panel Base = new Panel();
             Base.Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Left);
             Base.AutoSize = true;
-            Base.Size = new Size(ClientSize.Width, ClientSize.Height - Style.TitlebarSize);
+            Base.Size = new Size(ClientSize.Width - 64, ClientSize.Height - Style.TitlebarSize);
             Base.Location = new Point(0, Style.TitlebarSize);
             Base.BackColor = Style.Colors.BG;
 
@@ -93,7 +93,7 @@ namespace gdtools {
             }
 
             Elements.Dragger Dragger = new Elements.Dragger("ew", Sidebar, Main, Base.Height, SidebarMinSize, SidebarMaxSize, true);
-            Dragger.Anchor = (AnchorStyles.Top | AnchorStyles.Bottom);
+            Dragger.Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left);
             Dragger.BackColor = Style.Colors.BGDark;
 
             Base.Controls.Add(Sidebar);

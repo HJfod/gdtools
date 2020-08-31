@@ -8,12 +8,19 @@ using System.Dynamic;
 
 namespace gdtools {
     public static class Style {
-        public static int DraggerWidth = 4;
-        public static int TitlebarSize = 30;
-        public static int ResizeDrag = 15;
-        public static int TabSize = 40;
-        public static int TabSideSize = 6;
-        public static int PaddingSize = 15;
+        public static float Scale = ( (new Elements.Container()).CreateGraphics().DpiX / 96 );
+
+        public static int _S(int prop, float sc = 0F) {
+            if (sc == 0F) sc = Scale;
+            return (int)((float)prop * sc);
+        }
+
+        public static int DraggerWidth = _S(6);
+        public static int TitlebarSize = _S(30);
+        public static int ResizeDrag = _S(15);
+        public static int TabSize = _S(40);
+        public static int TabSideSize = _S(6);
+        public static int PaddingSize = _S(15);
         public static Padding Padding = new Padding(PaddingSize);
 
         public static dynamic Colors = new ExpandoObject();

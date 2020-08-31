@@ -17,10 +17,10 @@ namespace gdtools {
 
                 if (direction == "ew" || direction == "we") {
                     this.Size = new Size(Style.DraggerWidth, size);
-                    this.Left = before.Width - this.Width * 3;
+                    this.Left = before.Width - this.Width / (offset ? 1 : 2);
                 } else {
                     this.Size = new Size(size, Style.DraggerWidth);
-                    this.Top = before.Height - this.Height * 3;
+                    this.Top = before.Height - this.Height / (offset ? 1 : 2);
                 }
                 this.BringToFront();
 

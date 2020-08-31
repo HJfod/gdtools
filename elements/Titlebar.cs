@@ -11,7 +11,7 @@ namespace gdtools {
                 this.Dock = DockStyle.Right;
                 this.ForeColor = Style.Colors.Text;
                 this.Size = new Size((int)((double)Style.TitlebarSize * 1.5), Style.TitlebarSize);
-                this.Font = new Font("Segoe UI", Style.TitlebarSize / 3);
+                this.Font = new Font("Segoe UI", Style.TitlebarSize / (int)(3F * Style.Scale));
                 this.FlatStyle = FlatStyle.Flat;
                 this.FlatAppearance.BorderSize = 0;
 
@@ -30,8 +30,9 @@ namespace gdtools {
                 Title.Text = title;
                 Title.ForeColor = Style.Colors.Text;
                 Title.Location = new Point(0,0);
-                Title.Font = new Font("Segoe UI", Style.TitlebarSize / 3);
+                Title.Font = new Font("Segoe UI", Style.TitlebarSize / (int)(3F * Style.Scale));
                 Title.Height = Style.TitlebarSize;
+                Title.Width = (int)(100F * Style.Scale);
                 Title.TextAlign = ContentAlignment.MiddleCenter;
 
                 this.Controls.Add(Title);
