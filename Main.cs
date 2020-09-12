@@ -17,6 +17,7 @@ namespace gdtools {
             LoadInfo.Show();
             GDTools.DecodeCCFile(GDTools.GetCCPath("LocalLevels"), (string msg, int prog) => LoadInfo.Txt($"{msg} ({prog}%)"));
             GDTools.DecodeCCFile(GDTools.GetCCPath("GameManager"), (string msg, int prog) => LoadInfo.Txt($"{msg} ({prog}%)"));
+            GDTools.LoadUserData();
             LoadInfo.Close();
             LoadInfo.Dispose();
             
@@ -27,9 +28,10 @@ namespace gdtools {
             Tabs.Dock = DockStyle.Fill;
             Tabs.AutoSize = true;
 
-            foreach (FlowLayoutPanel Page in new FlowLayoutPanel[] {
+            foreach (Panel Page in new Panel[] {
                 new Pages.Home(),
-                new Pages.Share()
+                new Pages.Share(),
+                new Pages.Backups()
             }) {
                 TabPage Tab = new TabPage();
                 Tab.Controls.Add(Page);

@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace gdtools {
     namespace Pages {
-        public class Home : FlowLayoutPanel {
+        public class Home : TableLayoutPanel {
             public Home() {
                 this.Name = "Home";
                 this.Dock = DockStyle.Fill;

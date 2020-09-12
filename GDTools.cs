@@ -15,7 +15,8 @@ namespace gdtools {
         private static string _LLSaveData;
         private static string _CCDirPath;
         private static List<dynamic> _LevelList;
-        private static string _BackupLocation;
+        private static string _BackupDirectory;
+        public static string _UserDataName = "userdata";
         public static class Ext {
             public static string Level = "gmd";
             public static string LevelAlt = "lvl";
@@ -23,6 +24,7 @@ namespace gdtools {
             public static string LevelZipped = "gmdz";
             public static string Backup = "gdb";
             public static string LevelList = $".{Level}, .{LevelAlt}, .{LevelCompressed}, .{LevelZipped}";
+            public static string UserData = "user";
         }
 
         private static string DecryptXOR(string str, int key) {
@@ -101,6 +103,7 @@ namespace gdtools {
         }
  
         public static string GetCCPath(string which) {
+            if (which == "") return $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\..\\Local\\GeometryDash";
             return $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\..\\Local\\GeometryDash\\CC{which}.dat";
         }
 
@@ -298,19 +301,84 @@ namespace gdtools {
             }
         }
 
-        public class Backups {
-            private static string SetBackupLocation(string path) {
-                string prevFolder = _BackupLocation;
-                foreach (string folder in Directory.GetFiles(prevFolder)) {
-                    Console.WriteLine(folder);
-                    FileAttributes f = File.GetAttributes(folder);
-                    if ((f & FileAttributes.Directory) == FileAttributes.Directory) {
-                        if (File.Exists($"{folder}\\CCLocalLevels.dat") || File.Exists($"{folder}\\GameManager.dat")) {
-                            Directory.Move(folder, $"{path}\\{folder.Substring(folder.LastIndexOf("\\" + 1))}");
-                        }
+        public static bool SaveKeyToUserData(string key, string value, string type = "") {
+            string DataPath = Path.Combine(Directory.GetCurrentDirectory(), $"{_UserDataName}.{Ext.UserData}");
+            string NewData = "";
+            type = type == "" ? Int32.TryParse(value, out int res) ? "int" : "str" : type;
+            Console.WriteLine(DataPath);
+            if (File.Exists(DataPath)) {
+                bool found = false;
+                foreach (string line in File.ReadAllLines(DataPath, Encoding.UTF8)) {
+                    if (line.StartsWith(key)) {
+                        NewData += $"{line.Substring(0, line.IndexOf("=") + 1)}{type}>{value}";
+                        found = true;
+                    } else {
+                        NewData += $"{line}\n";
                     }
                 }
-                _BackupLocation = path;
+                if (!found) {
+                    NewData += $"{key}={type}>{value}\n";
+                }
+            } else {
+                NewData = $"{key}={type}>{value}\n";
+            }
+            File.WriteAllText(DataPath, NewData, Encoding.UTF8);
+            return true;
+        }
+
+        public static bool LoadUserData() {
+            string DataPath = Path.Combine(Directory.GetCurrentDirectory(), $"{_UserDataName}.{Ext.UserData}");
+            if (File.Exists(DataPath)) {
+                foreach (string line in File.ReadAllLines(DataPath, Encoding.UTF8)) {
+                    string val = line.Substring(line.IndexOf(">") + 1);
+                    switch (line.Substring(0, line.IndexOf("="))) {
+                        case "backup-directory":
+                            _BackupDirectory = val;
+                            break;
+                    }
+                }
+            }
+            return true;
+        }
+
+        public class Backups {
+            public static bool InitBackups() {
+                if (_BackupDirectory == null) _BackupDirectory = GetCCPath("");
+                return true;
+            }
+
+            public static List<dynamic> GetBackups() {
+                List<dynamic> res = new List<dynamic>{};
+                foreach(string file in Directory.GetDirectories(_BackupDirectory)) {
+                    res.Add(new {
+                        Name = file.Substring(file.LastIndexOf("\\") + 1)
+                    });
+                }
+                return res;
+            }
+
+            public static dynamic GetBackupInfo(string path, Action<string, int> callback = null) {
+                if (!path.Contains("\\")) {
+                    path = $"{_BackupDirectory}\\{path}";
+                }
+                string LLdata = DecodeCCFile($"{path}\\CCLocalLevels.dat", callback == null ? (s, e) => {} : callback);
+                string GMdata = DecodeCCFile($"{path}\\CCGameManager.dat", callback == null ? (s, e) => {} : callback);
+
+                return new {
+                    User = GetGDUserInfo(GMdata),
+                    Levels = GetLevelList(LLdata)
+                };
+            }
+
+            public static string SetBackupLocation(string path) {
+                string prevFolder = _BackupDirectory;
+                foreach (string folder in Directory.GetDirectories(prevFolder)) {
+                    if (File.Exists($"{folder}\\CCLocalLevels.dat") || File.Exists($"{folder}\\CCGameManager.dat")) {
+                        Directory.Move(folder, $"{path}\\{folder.Substring(folder.LastIndexOf("\\" + 1))}");
+                    }
+                }
+                _BackupDirectory = path;
+                SaveKeyToUserData("backup-directory", _BackupDirectory);
                 return null;
             }
         }
