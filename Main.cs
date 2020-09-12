@@ -20,27 +20,42 @@ namespace gdtools {
             GDTools.LoadUserData();
             LoadInfo.Close();
             LoadInfo.Dispose();
-            
+
             this.Text = $"{Settings.AppName} {Settings.AppVersion}";
             this.Size = Settings.DefaultSize;
 
-            TabControl Tabs = new TabControl();
+            this.CenterToScreen();
+
+            this.Init();
+        }
+
+        public void Reload() {
+            this.Controls.Clear();
+            this.Init();
+        }
+
+        private void Init() {
+            Meth.HandleTheme(this);
+
+            Dotnetrix_Samples.TabControl Tabs = new Dotnetrix_Samples.TabControl();
             Tabs.Dock = DockStyle.Fill;
             Tabs.AutoSize = true;
-
+            Meth.HandleTheme(Tabs);
+            
             foreach (Panel Page in new Panel[] {
                 new Pages.Home(),
                 new Pages.Share(),
-                new Pages.Backups()
+                new Pages.Backups(),
+                new Pages.SettingPage()
             }) {
                 TabPage Tab = new TabPage();
                 Tab.Controls.Add(Page);
                 Tab.Text = Page.Name;
+                Meth.HandleTheme(Tab);
                 Tabs.Controls.Add(Tab);
             }
 
             this.Controls.Add(Tabs);
-            this.CenterToScreen();
         }
     }
 }

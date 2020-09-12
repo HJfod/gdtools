@@ -14,11 +14,14 @@ namespace gdtools {
         public static string AppBuild = "DEV-BUILD";
         public static string Developers = "HJfod";
         public static int AppVersionNum = 1;
+        public static bool DarkTheme = false;
     }
 
-    static class Program {
+    public static class Program {
         [DllImport( "kernel32.dll" )]
         static extern bool AttachConsole( int dwProcessId );
+
+        public static Main MainForm = new gdtools.Main();
 
         [STAThread]
         static void Main() {
@@ -28,7 +31,7 @@ namespace gdtools {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            Application.Run(new Main());
+            Application.Run(MainForm);
         }
     }
 }

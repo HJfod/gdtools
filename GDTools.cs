@@ -49,7 +49,16 @@ namespace gdtools {
             return Encoding.UTF8.GetString(resultStream.ToArray());
         }
 
-        public static string DecodeCCFile(string path, Action<string, int> callback) {
+        private static string CompressGZip(Byte[] data) {
+            MemoryStream compressedStream = new MemoryStream(data);
+            MemoryStream resultStream = new MemoryStream();
+            GZipStream zipStream = new GZipStream(compressedStream, CompressionMode.Compress);
+
+            zipStream.CopyTo(resultStream);
+            return Encoding.UTF8.GetString(resultStream.ToArray());
+        }
+
+        public static string DecodeCCFile(string path, Action<string, int> callback, bool MutateVars = true) {
             string data;
 
             bool isLL = (path.Split("\\").Last() == "CCGameManager.dat") ? false : true;
@@ -90,14 +99,14 @@ namespace gdtools {
 
                 callback($"\t{watch.ElapsedMilliseconds}ms\r\nDecoded {path}!", 100);
                 
-                _CCDirPath = path.Substring(0, path.LastIndexOf("\\"));
-                if (isLL) _LLSaveData = data; else _GMSaveData = data;
+                if (MutateVars) _CCDirPath = path.Substring(0, path.LastIndexOf("\\"));
+                if (MutateVars) if (isLL) _LLSaveData = data; else _GMSaveData = data;
                 return data;
             } else {
                 callback($"\t{watch.ElapsedMilliseconds}ms\r\nSkipped decoding {path}!", 100);
                 
-                _CCDirPath = path.Substring(0, path.LastIndexOf("\\"));
-                if (isLL) _LLSaveData = file; else _GMSaveData = file;
+                if (MutateVars) _CCDirPath = path.Substring(0, path.LastIndexOf("\\"));
+                if (MutateVars) if (isLL) _LLSaveData = file; else _GMSaveData = file;
                 return file;
             }
         }
@@ -200,14 +209,14 @@ namespace gdtools {
             })[Song];
         }
 
-        public static dynamic GetLevelInfo(string name) {
+        public static dynamic GetLevelInfo(string name, List<dynamic> from = null) {
             dynamic lvl = null;
 
             if (name.IndexOf("\\") > -1) {
                 lvl = new { Data = File.ReadAllText(name), Name = "" };
                 if (!lvl.Data.StartsWith("<d>")) lvl.Data = ConvertLvlToGmd(lvl.Data);
             } else {
-                foreach (dynamic x in _LevelList) {
+                foreach (dynamic x in from == null ? _LevelList : from) {
                     if (x.Name == name) {
                         lvl = x;
                         break;
@@ -243,7 +252,7 @@ namespace gdtools {
             }
         }
 
-        public static string ExportLevel(string name, string path = "") {
+        public static string ExportLevel(string name, string path = "", bool comp = false) {
             try {
                 dynamic lvl = null;
 
@@ -257,9 +266,13 @@ namespace gdtools {
                 if (lvl == null) {
                     return $"Level {name} not found.";
                 } else {
-                    string output = $@"{path}\{name}.{Ext.Level}";
+                    string output = $@"{path}\{name}.{(comp ? Ext.LevelCompressed : Ext.Level)}";
 
                     string NewData = Regex.Replace(lvl.Data, @"<k>k_\d+<\/k>", "");
+
+                    if (comp) {
+                        NewData = CompressGZip(Encoding.UTF8.GetBytes(NewData));
+                    }
 
                     File.WriteAllText(output, NewData);
 
@@ -283,6 +296,8 @@ namespace gdtools {
                     string data = _LLSaveData;
 
                     if (path.EndsWith(Ext.LevelAlt)) lvl = ConvertLvlToGmd(lvl);
+
+                    if (path.EndsWith(Ext.LevelCompressed)) lvl = DecompressGZip(Encoding.UTF8.GetBytes(lvl));
                     
                     data = Regex.Replace(data, @"<k>k1<\/k><i>\d+?<\/i>", "");
                     string[] splitData = data.Split("<k>_isArr</k><t />");
@@ -305,7 +320,6 @@ namespace gdtools {
             string DataPath = Path.Combine(Directory.GetCurrentDirectory(), $"{_UserDataName}.{Ext.UserData}");
             string NewData = "";
             type = type == "" ? Int32.TryParse(value, out int res) ? "int" : "str" : type;
-            Console.WriteLine(DataPath);
             if (File.Exists(DataPath)) {
                 bool found = false;
                 foreach (string line in File.ReadAllLines(DataPath, Encoding.UTF8)) {
@@ -335,6 +349,11 @@ namespace gdtools {
                         case "backup-directory":
                             _BackupDirectory = val;
                             break;
+                        case "dark-mode":
+                            if (Int32.Parse(val) == 1) {
+                                Settings.DarkTheme = true;
+                            }
+                            break;
                     }
                 }
             }
@@ -361,8 +380,8 @@ namespace gdtools {
                 if (!path.Contains("\\")) {
                     path = $"{_BackupDirectory}\\{path}";
                 }
-                string LLdata = DecodeCCFile($"{path}\\CCLocalLevels.dat", callback == null ? (s, e) => {} : callback);
-                string GMdata = DecodeCCFile($"{path}\\CCGameManager.dat", callback == null ? (s, e) => {} : callback);
+                string LLdata = DecodeCCFile($"{path}\\CCLocalLevels.dat", callback == null ? (s, e) => {} : callback, false);
+                string GMdata = DecodeCCFile($"{path}\\CCGameManager.dat", callback == null ? (s, e) => {} : callback, false);
 
                 return new {
                     User = GetGDUserInfo(GMdata),

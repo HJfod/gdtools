@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Windows.Forms;
 using System.Reflection;
+using System.Drawing;
 
 namespace gdtools {
     namespace Pages {
@@ -9,26 +10,68 @@ namespace gdtools {
             Elem.Select ExportSelect;
 
             FlowLayoutPanel ImportLeveLArea;
+            CheckBox ExportCompressed;
 
             public Share() {
                 this.Name = "Sharing";
                 this.Dock = DockStyle.Fill;
+                Meth.HandleTheme(this);
 
                 ImportLeveLArea = new FlowLayoutPanel();
 
                 ExportSelect = new Elem.Select();
+                ExportSelect.DoubleClick += (s, e) => ViewInfo();
 
                 foreach (dynamic lvl in GDTools.GetLevelList()) {
                     ExportSelect.AddItem(lvl.Name);
                 }
 
+                ExportCompressed = new CheckBox();
+                ExportCompressed.Text = "Export compressed (.gmdc)";
+                ExportCompressed.AutoSize = true;
+
                 this.Controls.Add(ExportSelect);
                 this.Controls.Add(new Elem.But("Export Selected", (s, e) => ExportLevel()));
+                this.Controls.Add(ExportCompressed);
                 this.Controls.Add(new Elem.NewLine());
                 this.Controls.Add(new Elem.SectionBreak());
                 this.Controls.Add(new Elem.NewLine());
-                this.Controls.Add(new Elem.But("Import", (s, e) => ExportLevel()));
+                this.Controls.Add(new Elem.But("Import", (s, e) => {
+                    using (OpenFileDialog ofd = new OpenFileDialog()) {
+                        ofd.InitialDirectory = "c:\\";
+                        ofd.Filter = $"Level files (*.{GDTools.Ext.LevelAlt};*.{GDTools.Ext.Level})|*.{GDTools.Ext.LevelAlt};*.{GDTools.Ext.Level}|All files (*.*)|*.*";
+                        ofd.FilterIndex = 1;
+                        ofd.RestoreDirectory = true;
+                        ofd.Multiselect = true;
+
+                        if (ofd.ShowDialog() == DialogResult.OK) {
+                            foreach (string file in ofd.FileNames) {
+                                AddImport(file);
+                            }
+                        }
+                    }
+                }));
                 this.Controls.Add(ImportLeveLArea);
+            }
+
+            private void ViewInfo() {
+                try {
+                    if (ExportSelect.SelectedItems.Count > 0) {
+                        Elem.Select.SelectItem lvl = (Elem.Select.SelectItem)ExportSelect.SelectedItems[0];
+                        dynamic LevelInfo = GDTools.GetLevelInfo(lvl.Text);
+                        
+                        string Info = "";
+
+                        foreach (PropertyInfo i in LevelInfo.GetType().GetProperties()) {
+                            if (i.Name != "Name" && i.Name != "Creator" && i.Name != "Description")
+                                Info += $"{i.Name.Replace("_", " ")}: {i.GetValue(LevelInfo)}\n";
+                        }
+
+                        MessageBox.Show(Info, $"Info for {lvl.Text}", MessageBoxButtons.OK, MessageBoxIcon.None);
+                    }
+                } catch(Exception err) {
+                    MessageBox.Show(err.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
 
             public void AddImport(string file) {
@@ -97,14 +140,14 @@ namespace gdtools {
                     string failure = "";
                     string success = "";
                     foreach (Elem.Select.SelectItem i in ExportSelect.SelectedItems) {
-                        string ExportTry = GDTools.ExportLevel(i.Text, fbd.SelectedPath);
+                        string ExportTry = GDTools.ExportLevel(i.Text, fbd.SelectedPath, ExportCompressed.Checked);
                         if (ExportTry != null) {
                             failure += ExportTry;
                         } else {
                             success += $"{i.Text}, ";
                         }
                     }
-                    MessageBox.Show($"Succesfully exported {success.Substring(0,success.Length-2)}{(failure.Length > 0 ? $"; Failed: {failure}" : "")}");
+                    MessageBox.Show($"Succesfully exported {(success.Length > 0 ? success.Substring(0,success.Length-2) : "")}{(failure.Length > 0 ? $"; Failed: {failure}" : "")}");
                 } else if (dr != DialogResult.Cancel) {
                     MessageBox.Show("Selected path not accepted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }

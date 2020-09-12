@@ -3,6 +3,17 @@ using System.Drawing;
 using System.Windows.Forms;
 
 namespace gdtools {
+    public static class Meth {
+        public static void HandleTheme(Control obj, bool _noback = false) {
+            if (Settings.DarkTheme) {
+                obj.ForeColor = Color.White;
+                if (!_noback) obj.BackColor = Color.Black;
+            } else {
+                obj.ForeColor = Color.Black;
+                if (!_noback) obj.BackColor = Color.White;
+            }
+        }
+    }
     namespace Elem {
         public partial class Select : ListBox {
             public class SelectItem {
@@ -16,6 +27,7 @@ namespace gdtools {
                 this.ValueMember = "Text";
                 this.Width = 300;
                 this.Height = 100;
+                Meth.HandleTheme(this);
             }
 
             public bool AddItem(string Text) {
@@ -59,13 +71,16 @@ namespace gdtools {
         public class Text : Label {
             public Text(string _Text = "") {
                 this.AutoSize = true;
+                Meth.HandleTheme(this, true);
                 if (_Text != "") this.Text = _Text;
             }
         }
 
         public class But : Button {
             public But(string _Text = "", EventHandler _Click = null) {
+                Meth.HandleTheme(this);
                 this.AutoSize = true;
+                this.FlatStyle = FlatStyle.Flat;
                 if (_Text != "") this.Text = _Text;
                 if (_Click != null) this.Click += _Click;
             }
@@ -85,7 +100,8 @@ namespace gdtools {
                 this.Width = Settings.DefaultSize.Width;
                 this.Height = 1;
                 this.Dock = DockStyle.Fill;
-                this.BackColor = Color.LightGray;
+                Meth.HandleTheme(this);
+                this.BackColor = this.ForeColor;
             }
         }
         

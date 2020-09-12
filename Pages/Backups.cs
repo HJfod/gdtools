@@ -12,21 +12,17 @@ namespace gdtools {
             public Backups() {
                 this.Name = "Backups";
                 this.Dock = DockStyle.Fill;
+                Meth.HandleTheme(this);
 
-                GDTools.Backups.InitBackups();
-
-                BackupSelect = new Elem.Select(false);
-
-                RefreshBackupList();
-
-                ContextMenuStrip CM = new ContextMenuStrip();
-                CM.Items.Add(new ToolStripMenuItem("View selected backup", null, (s, e) => {
+                EventHandler ViewBackup = (s, e) => {
                     if (BackupSelect.SelectedItem != null) {
                         Elem.Select.SelectItem backup = (Elem.Select.SelectItem)BackupSelect.SelectedItem;
                         
                         Form Info = new Form();
                         Info.Size = new Size(350, 400);
-                        Info.Text = $"Viewing {backup}";
+                        Info.Text = $"Viewing {backup.Text}";
+
+                        Meth.HandleTheme(Info);
 
                         Elem.Text Load = new Elem.Text("Loading...");
 
@@ -42,7 +38,7 @@ namespace gdtools {
                         Levels.DoubleClick += (s, e) => {
                             if (Levels.SelectedItem != null) {
                                 Elem.Select.SelectItem lvl = (Elem.Select.SelectItem)Levels.SelectedItem;
-                                dynamic LevelInfo = GDTools.GetLevelInfo(lvl.Text);
+                                dynamic LevelInfo = GDTools.GetLevelInfo(lvl.Text, BackupInfo.Levels);
                                 
                                 string Info = "";
 
@@ -59,7 +55,7 @@ namespace gdtools {
                             User += $"{i.Name.Replace("_", " ")}: {i.GetValue(BackupInfo.User.Stats)}\r\n";
                         }
 
-                        foreach (dynamic lvl in GDTools.GetLevelList()) {
+                        foreach (dynamic lvl in BackupInfo.Levels) {
                             Levels.AddItem(lvl.Name);
                         }
 
@@ -76,22 +72,31 @@ namespace gdtools {
 
                         Info.Controls.Add(Contain);
                     }
-                }));
+                };
+
+                GDTools.Backups.InitBackups();
+
+                BackupSelect = new Elem.Select(false);
+                BackupSelect.DoubleClick += ViewBackup;
+
+                RefreshBackupList();
+
+                ContextMenuStrip CM = new ContextMenuStrip();
+                CM.Items.Add(new ToolStripMenuItem("View selected backup", null, ViewBackup));
                 BackupSelect.ContextMenuStrip = CM;
 
                 FlowLayoutPanel BackupControls = new FlowLayoutPanel();
                 BackupControls.Controls.Add(new Elem.But("New Backup", (s, e) => {}));
                 BackupControls.Controls.Add(new Elem.But("Import Backup", (s, e) => {}));
                 BackupControls.Controls.Add(new Elem.But("Change Directory", (s, e) => {
-                    
-                using (FolderBrowserDialog ofd = new FolderBrowserDialog()) {
-                    ofd.Description = "Select backup directory";
+                    using (FolderBrowserDialog ofd = new FolderBrowserDialog()) {
+                        ofd.Description = "Select backup directory";
 
-                    if (ofd.ShowDialog() == DialogResult.OK) {
-                        GDTools.Backups.SetBackupLocation(ofd.SelectedPath);
-                        RefreshBackupList();
+                        if (ofd.ShowDialog() == DialogResult.OK) {
+                            GDTools.Backups.SetBackupLocation(ofd.SelectedPath);
+                            RefreshBackupList();
+                        }
                     }
-                }
                 }));
 
                 this.Controls.Add(BackupSelect);
