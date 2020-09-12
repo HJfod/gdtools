@@ -37,6 +37,10 @@ namespace gdtools {
                 this.MinimizeBox = false;
                 this.MaximizeBox = false;
 
+                Loading = new Elem.Text();
+
+                this.Controls.Add(Loading);
+
                 this.CenterToScreen();
             }
 
