@@ -1,21 +1,18 @@
+using System;
 using System.Windows.Forms;
-using System.Drawing;
 
 namespace gdtools {
     namespace Pages {
-        public class Home : Page {
+        public class Home : FlowLayoutPanel {
             public Home() {
-                this._Color = Style.Colors.TabHome;
-                this._Name = "Home";
+                this.Name = "Home";
+                this.Dock = DockStyle.Fill;
 
-                Elements.Container C = new Elements.Container();
-
-                Label t = new Label();
-                t.Text = "Welcome to GDTools!";
-
-                C.Controls.Add(t);
-
-                this.Controls.Add(C);
+                this.Controls.Add(new Elem.Text($"Welcome to {Settings.AppName}!"));
+                this.Controls.Add(new Elem.BigNewLine());
+                this.Controls.Add(new Elem.Text($"Current version: {Settings.AppBuild} {Settings.AppVersion} ({Settings.AppVersionNum})"));
+                this.Controls.Add(new Elem.BigNewLine());
+                this.Controls.Add(new Elem.Text($"Credits:\r\nDeveloped by {Settings.Developers}"));
             }
         }
     }

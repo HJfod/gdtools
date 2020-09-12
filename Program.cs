@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Drawing;
 
 namespace gdtools {
     public static class Settings {
-        public static Size DefaultSize = new Size(1280, 720);
+        public static Size DefaultSize = new Size(400, 450);
         public static string AppName = "GDTools";
+        public static string AppVersion = "v0.1.0";
+        public static string AppBuild = "DEV-BUILD";
+        public static string Developers = "HJfod";
+        public static int AppVersionNum = 1;
     }
 
     static class Program {
@@ -18,15 +22,13 @@ namespace gdtools {
 
         [STAThread]
         static void Main() {
-            AttachConsole( -1 );
-            
+            AttachConsole(-1);
+
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            
-            Style.Init();
 
-            Application.Run(new GDTools());
+            Application.Run(new Main());
         }
     }
 }

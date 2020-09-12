@@ -1,136 +1,318 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
+using System;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Reflection;
+using System.IO;
+using System.Diagnostics;
+using System.IO.Compression;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Threading;
 
 namespace gdtools {
-    public partial class GDTools : Form {
-        public GDTools() {
-            InitializeComponent();
+    public class GDTools {
+        private static string _GMSaveData;
+        private static string _LLSaveData;
+        private static string _CCDirPath;
+        private static List<dynamic> _LevelList;
+        private static string _BackupLocation;
+        public static class Ext {
+            public static string Level = "gmd";
+            public static string LevelAlt = "lvl";
+            public static string LevelCompressed = "gmdc";
+            public static string LevelZipped = "gmdz";
+            public static string Backup = "gdb";
+            public static string LevelList = $".{Level}, .{LevelAlt}, .{LevelCompressed}, .{LevelZipped}";
         }
 
-        public int SidebarSize = (int)(150F * Style.Scale);
-        public int SidebarMaxSize = (int)(350F * Style.Scale);
-        public int SidebarMinSize = 100;
-        public int SelectedTab = 0;
+        private static string DecryptXOR(string str, int key) {
+            byte[] xor = Encoding.UTF8.GetBytes(str);
+            for (int i = 0; i < str.Length; i++) {
+                xor[i] = (byte)(xor[i] ^ key);
+            }
+            return Encoding.UTF8.GetString(xor);
+        }
 
-        public dynamic TabList = new {};
+        private static Byte[] DecryptBase64(string istr) {
+            return Convert.FromBase64String(istr);
+        }
 
-        protected override CreateParams CreateParams {
-            get {
-                const int CS_DROPSHADOW = 0x20000;
-                CreateParams cp = base.CreateParams;
-                cp.ClassStyle |= CS_DROPSHADOW;
-                return cp;
+        private static string DecompressGZip(Byte[] data) {
+            // i would once again like to thank https://github.com/gd-edit/GDAPI for being open source
+            MemoryStream compressedStream = new MemoryStream(data);
+            MemoryStream resultStream = new MemoryStream();
+            GZipStream zipStream = new GZipStream(compressedStream, CompressionMode.Decompress);
+
+            zipStream.CopyTo(resultStream);
+            return Encoding.UTF8.GetString(resultStream.ToArray());
+        }
+
+        public static string DecodeCCFile(string path, Action<string, int> callback) {
+            string data;
+
+            bool isLL = (path.Split("\\").Last() == "CCGameManager.dat") ? false : true;
+
+            callback($"Loading {path.Split("\\").Last()}...", 0 + 0);
+
+            Stopwatch watch = new Stopwatch();
+
+            watch.Start();
+            string file = File.ReadAllText($"{path}");
+            watch.Stop();
+
+            if (!file.StartsWith("<?xml version=\"1.0\"?>")) {
+
+                callback($"\t{watch.ElapsedMilliseconds}ms\r\nDecrypting XOR...", 25);
+
+                watch.Reset();
+                watch.Start();
+                data = DecryptXOR(file, 11);
+                data = data.Replace("-", "+").Replace("_", "/").Replace("\0", string.Empty);
+                int remaining = data.Length % 4;
+                if (remaining > 0) data += new string('=', 4 - remaining);  // thank you to GDEdit / GDAPI for being open source
+                watch.Stop();
+
+                callback($"\t{watch.ElapsedMilliseconds}ms\r\nDecrypting Base64...", 50);
+
+                watch.Reset();
+                watch.Start();
+                Byte[] gzib64 = DecryptBase64(data);
+                watch.Stop();
+
+                callback($"\t{watch.ElapsedMilliseconds}ms\r\nDecompressing GZip...", 75);
+
+                watch.Reset();
+                watch.Start();
+                data = DecompressGZip(gzib64);
+                watch.Stop();
+
+                callback($"\t{watch.ElapsedMilliseconds}ms\r\nDecoded {path}!", 100);
+                
+                _CCDirPath = path.Substring(0, path.LastIndexOf("\\"));
+                if (isLL) _LLSaveData = data; else _GMSaveData = data;
+                return data;
+            } else {
+                callback($"\t{watch.ElapsedMilliseconds}ms\r\nSkipped decoding {path}!", 100);
+                
+                _CCDirPath = path.Substring(0, path.LastIndexOf("\\"));
+                if (isLL) _LLSaveData = file; else _GMSaveData = file;
+                return file;
             }
         }
+ 
+        public static string GetCCPath(string which) {
+            return $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\..\\Local\\GeometryDash\\CC{which}.dat";
+        }
 
-        private void InitializeComponent() {
-            this.Size = Settings.DefaultSize;
-            this.FormBorderStyle = FormBorderStyle.None;
-            this.DoubleBuffered = true;
-            this.ForeColor = Style.Colors.Text;
-            this.SetStyle(ControlStyles.ResizeRedraw, true);
-
-            Elements.Titlebar Titlebar = new Elements.Titlebar(ClientSize.Width, Style.TitlebarSize, this, Settings.AppName);
-            Titlebar.Anchor = (AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Left);
-
-            Panel Base = new Panel();
-            Base.Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Left);
-            Base.AutoSize = true;
-            Base.Size = new Size(ClientSize.Width - 64, ClientSize.Height - Style.TitlebarSize - 65);
-            Base.Location = new Point(0, Style.TitlebarSize);
-            Base.BackColor = Style.Colors.BG;
-
-            Panel Main = new Panel();
-            Main.AutoSize = true;
-            Main.Size = new Size(Base.Width - this.SidebarSize, Base.Height);
-            Main.Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right | AnchorStyles.Left);
-            Main.BackColor = Style.Colors.BG;
-            Main.Location = new Point(this.SidebarSize, 0);
-
-            Panel Sidebar = new Panel();
-            Sidebar.Size = new Size(this.SidebarSize, Base.Height);
-            Sidebar.AutoSize = true;
-            Sidebar.Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left);
-            Sidebar.BackColor = Style.Colors.BGDark;
-            Sidebar.Location = new Point(0, 0);
-
-            this.TabList = new {
-                Home = new Pages.Home(),
-                Settings = new Pages.Settings()
-            };
-
-            int ix = 0;
-            foreach (PropertyInfo pi in TabList.GetType().GetProperties()) {
-                Pages.Page i = pi.GetValue(TabList);
-
-                Elements.TabButton tab = new Elements.TabButton(Sidebar.Width, i._Name, null, i._Color, ix);
-                if (ix < TabList.GetType().GetProperties().Length - 1) {
-                    tab.Top = ix * Style.TabSize;
+        private static string GetKey(string savedata, string key, string type = ".*?", bool legacy = false) {
+            if (type == null) {
+                Match match = Regex.Match(savedata, $"<k>{key}</k>.*?>", RegexOptions.None, Regex.InfiniteMatchTimeout);
+                if (match.Value != "") {
+                    return match.Value.Substring(match.Value.LastIndexOf("<")).IndexOf("t") > -1 ? "True" : "False";
                 } else {
-                    tab.Top = Sidebar.Height - Style.TabSize;
-                    tab.Anchor = ( AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right );
+                    return "False";
                 }
-                tab.Click += (object s, EventArgs e) => {
-                    foreach (Elements.TabButton i in Sidebar.Controls) {
-                        i._Selected = false;
-                        i.Invalidate();
+            }
+            string actualTypeMatch = Regex.Match(savedata, $"<k>{key}</k><{type}>", RegexOptions.None, Regex.InfiniteMatchTimeout).Value;
+            if (actualTypeMatch == "") return "";
+            string actualType = actualTypeMatch.Substring(actualTypeMatch.LastIndexOf("<")+1, 1);
+
+            string matcher = $"<k>{key}</k><{actualType}>.*?</{actualType}>";
+            Match m = Regex.Match(savedata, matcher, RegexOptions.None, Regex.InfiniteMatchTimeout);
+            return m.Value == "" ? "" : m.Value.Substring($"<k>{key}</k><A>".Length, m.Value.Length - $"<k>{key}</k><A>".Length - $"</A>".Length);
+        }
+        
+        public static dynamic GetGDUserInfo(string savedata) {
+            if (savedata == null) savedata = _GMSaveData;
+
+            string statdata = GetKey(savedata, "GS_value");
+            return new {
+                Name = GetKey(savedata, "playerName"),
+                UserID = GetKey(savedata, "playerUserID"),
+                Stats = new {
+                    Jumps = GetKey(statdata, "1"),
+                    Total_Attempts = GetKey(statdata, "2"),
+                    Completed_Online_Levels = GetKey(statdata, "4"),
+                    Demons = GetKey(statdata, "5"),
+                    Stars = GetKey(statdata, "6"),
+                    Diamonds = GetKey(statdata, "13"),
+                    Orbs = GetKey(statdata, "14"),
+                    Coins = GetKey(statdata, "8"),
+                    User_Coins = GetKey(statdata, "12"),
+                    Killed_Players = GetKey(statdata, "9"),
+                    Game_Opened = $"{GetKey(savedata, "bootups")} times"
+                }
+            };
+        }
+
+        public static List<dynamic> GetLevelList(string savedata = null, Action<string, int> callback = null) {
+            if (savedata == null) savedata = _LLSaveData;
+
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+
+            List<dynamic> levels = new List<dynamic>();
+            string matcher = @"<k>k_\d+<\/k>.+?<\/d>\n? *<\/d>";
+            
+            foreach (Match lvl in Regex.Matches(savedata, matcher, RegexOptions.Singleline, Regex.InfiniteMatchTimeout)) {
+                if (lvl.Value != "") {
+                    string Name = GetKey(lvl.Value, "k2", "s");
+
+                    if (callback != null) callback($"Loaded {Name}", 100);
+
+                    levels.Add(new { Name = Name, Data = lvl.ToString() });
+                }
+            }
+
+            watch.Stop();
+
+            _LevelList = levels;
+
+            return levels;
+        }
+
+        private static string ReplaceOfficialSongName(string Song) {
+            return (new Dictionary<string, string> {
+                { "0", "Stereo Madness" },
+                { "1", "Back on Track" },
+                { "2", "Polargeist" },
+                { "3", "Dry Out" },
+                { "4", "Base After Base" },
+                { "5", "Cant Let Go" },
+                { "6", "Jumper" },
+                { "7", "Time Machine" },
+                { "8", "Cycles" },
+                { "9", "xStep" },
+                { "10", "Clutterfunk" },
+                { "11", "Theory of Everything" },
+                { "12", "Electroman Adventures" },
+                { "13", "Clubstep" },
+                { "14", "Electrodynamix" },
+                { "15", "Hexagon Force" },
+                { "16", "Blast Processing" },
+                { "17", "Theory of Everything 2" },
+                { "18", "Geometrical Dominator" },
+                { "19", "Deadlocked" },
+                { "20", "Fingerdash" },
+            })[Song];
+        }
+
+        public static dynamic GetLevelInfo(string name) {
+            dynamic lvl = null;
+
+            if (name.IndexOf("\\") > -1) {
+                lvl = new { Data = File.ReadAllText(name), Name = "" };
+                if (!lvl.Data.StartsWith("<d>")) lvl.Data = ConvertLvlToGmd(lvl.Data);
+            } else {
+                foreach (dynamic x in _LevelList) {
+                    if (x.Name == name) {
+                        lvl = x;
+                        break;
                     }
-                    tab._Selected = true;
+                }
+            }
+
+            if (lvl == null) {
+                return null;
+            } else {
+                int editorTime = Int32.Parse(GetKey(lvl.Data, "k80"));
+                string P = GetKey(lvl.Data, "k41");
+                string Song = GetKey(lvl.Data, "k8");
+                string Desc = Encoding.UTF8.GetString(DecryptBase64(GetKey(lvl.Data, "k3")));
+                string Rev = GetKey(lvl.Data, "k46");
+                string Copy = GetKey(lvl.Data, "k42");
+
+                return new {
+                    Name = lvl.Name == "" ? GetKey(lvl.Data, "k2") : lvl.Name,
+                    Length = GetKey(lvl.Data, "k23"),
+                    Creator = GetKey(lvl.Data, "k5"),
+                    Version = GetKey(lvl.Data, "k16"),
+                    Password = P == "1" ? "Free to Copy" : P == "" ? "No copy" : P.Substring(1),
+                    Song = Song != "" ? ReplaceOfficialSongName(Song) : GetKey(lvl.Data, "k45"),
+                    Description = Desc,
+                    Object_count = GetKey(lvl.Data, "k48"),
+                    Editor_time = editorTime > 3600 ? $"{Math.Round((float)editorTime / 3600F, 2)}h" : $"{Math.Round((float)editorTime / 60F, 2)}m",
+                    Verified = GetKey(lvl.Data, "k14", null),
+                    Attempts = GetKey(lvl.Data, "k18"),
+                    Revision = Rev == "" ? "None" : Rev,
+                    Copied_from = Copy == "" ? "None" : Copy
                 };
-
-                if (ix == 0) tab._Selected = true;
-
-                Sidebar.Controls.Add(tab);
-
-                ix++;
             }
-
-            Elements.Dragger Dragger = new Elements.Dragger("ew", Sidebar, Main, Base.Height, SidebarMinSize, SidebarMaxSize, true);
-            Dragger.Anchor = (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left);
-            Dragger.BackColor = Style.Colors.BGDark;
-
-            Base.Controls.Add(Sidebar);
-            Base.Controls.Add(Dragger);
-            Base.Controls.Add(Main);
-
-            Dragger.BringToFront();
-
-            this.Controls.Add(Base);
-            this.Controls.Add(Titlebar);
-
-            Titlebar.BringToFront();
-            CenterToScreen();
         }
 
-        protected override void OnPaint(PaintEventArgs e) {
-            Rectangle rc = new Rectangle(this.ClientSize.Width - Style.ResizeDrag, this.ClientSize.Height - Style.ResizeDrag, Style.ResizeDrag, Style.ResizeDrag);
-            ControlPaint.DrawSizeGrip(e.Graphics, this.BackColor, rc);
-            rc = new Rectangle(0, 0, this.ClientSize.Width, Style.TitlebarSize);
-            e.Graphics.FillRectangle(Brushes.DarkBlue, rc);
+        public static string ExportLevel(string name, string path = "") {
+            try {
+                dynamic lvl = null;
+
+                foreach (dynamic x in _LevelList) {
+                    if (x.Name == name) {
+                        lvl = x;
+                        break;
+                    }
+                }
+
+                if (lvl == null) {
+                    return $"Level {name} not found.";
+                } else {
+                    string output = $@"{path}\{name}.{Ext.Level}";
+
+                    string NewData = Regex.Replace(lvl.Data, @"<k>k_\d+<\/k>", "");
+
+                    File.WriteAllText(output, NewData);
+
+                    return null;
+                }
+            } catch (Exception e) {
+                return $"Error exporting {name}: {e}.";
+            }
         }
 
-        protected override void WndProc(ref Message m) {
-            if (m.Msg == 0x84) {  // Trap WM_NCHITTEST
-                Point pos = new Point(m.LParam.ToInt32());
-                pos = this.PointToClient(pos);
-                if (pos.Y < Style.TitlebarSize) {
-                    m.Result = (IntPtr)2;  // HTCAPTION
-                    return;
+        public static string ConvertLvlToGmd(string lvl) {
+            lvl = DecompressGZip(Encoding.Unicode.GetBytes(lvl));
+            lvl = $"<d>{lvl}</d>";
+            return lvl;
+        }
+
+        public static string ImportLevel(string path) {
+            if (File.Exists(path)) {
+                try {
+                    string lvl = File.ReadAllText(path);
+                    string data = _LLSaveData;
+
+                    if (path.EndsWith(Ext.LevelAlt)) lvl = ConvertLvlToGmd(lvl);
+                    
+                    data = Regex.Replace(data, @"<k>k1<\/k><i>\d+?<\/i>", "");
+                    string[] splitData = data.Split("<k>_isArr</k><t />");
+                    splitData[1] = Regex.Replace(splitData[1], @"<k>k_(\d+)<\/k><d><k>kCEK<\/k>",
+                    (Match m) => $"<k>k_{(Int32.Parse((Regex.Match(m.Value, @"k_\d+").Value.Substring(2))) + 1)}</k><d><k>kCEK</k>");
+                    data = splitData[0] + "<k>_isArr</k><t /><k>k_0</k>" + lvl + splitData[1];
+
+                    File.WriteAllText($"{_CCDirPath}\\CCLocalLevels.dat", data);
+
+                    return null;
+                } catch (Exception e) {
+                    return e.ToString();
                 }
-                if (pos.X >= this.ClientSize.Width - Style.ResizeDrag && pos.Y >= this.ClientSize.Height - Style.ResizeDrag) {
-                    m.Result = (IntPtr)17; // HTBOTTOMRIGHT
-                    return;
-                }
+            } else {
+                return "File doesn't exist!";
             }
-            base.WndProc(ref m);
+        }
+
+        public class Backups {
+            private static string SetBackupLocation(string path) {
+                string prevFolder = _BackupLocation;
+                foreach (string folder in Directory.GetFiles(prevFolder)) {
+                    Console.WriteLine(folder);
+                    FileAttributes f = File.GetAttributes(folder);
+                    if ((f & FileAttributes.Directory) == FileAttributes.Directory) {
+                        if (File.Exists($"{folder}\\CCLocalLevels.dat") || File.Exists($"{folder}\\GameManager.dat")) {
+                            Directory.Move(folder, $"{path}\\{folder.Substring(folder.LastIndexOf("\\" + 1))}");
+                        }
+                    }
+                }
+                _BackupLocation = path;
+                return null;
+            }
         }
     }
 }
