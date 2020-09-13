@@ -23,6 +23,8 @@ namespace gdtools {
                         Form Info = new Form();
                         Info.Size = new Size(350, 400);
                         Info.Text = $"Viewing {backup.Text}";
+                        Info.Icon = new Icon(Settings.IconPath);
+                        Info.FormClosed += (s, e) => Info.Dispose();
 
                         Meth.HandleTheme(Info);
 

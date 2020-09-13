@@ -14,6 +14,7 @@ namespace gdtools {
         public Main() {
             this.Text = $"{Settings.AppName} {Settings.AppVersion}";
             this.Size = Settings.DefaultSize;
+            this.Icon = new Icon(Settings.IconPath);
 
             this.CenterToScreen();
 

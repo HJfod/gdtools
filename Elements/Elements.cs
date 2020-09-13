@@ -48,6 +48,7 @@ namespace gdtools {
                 this.Size = new Size(120,80);
                 this.MinimizeBox = false;
                 this.MaximizeBox = false;
+                this.Icon = new Icon(Settings.IconPath);
 
                 Loading = new Elem.Text();
 
@@ -65,6 +66,7 @@ namespace gdtools {
             public PauseForm() {
                 this.Text = "Program Paused";
                 this.Size = new Size(400, 200);
+                this.Icon = new Icon(Settings.IconPath);
                 
                 Elem.Text InfoText = new Elem.Text("This app can not be used while GD is open.\r\n\r\nIt will automatically boot up once you close the game.");
 
@@ -84,6 +86,7 @@ namespace gdtools {
 
                 this.Text = _Name;
                 this.Size = new Size(250, 200);
+                this.Icon = new Icon(Settings.IconPath);
 
                 TableLayoutPanel p = new TableLayoutPanel();
                 p.Dock = DockStyle.Fill;
