@@ -11,6 +11,7 @@ namespace gdtools {
 
             FlowLayoutPanel ImportLeveLArea;
             CheckBox ExportCompressed;
+            TableLayoutPanel RefreshDiv;
 
             public Share() {
                 this.Name = "Sharing";
@@ -18,6 +19,8 @@ namespace gdtools {
                 Meth.HandleTheme(this);
 
                 ImportLeveLArea = new FlowLayoutPanel();
+                ImportLeveLArea.Dock = DockStyle.Fill;
+                ImportLeveLArea.AutoSize = true;
 
                 ExportSelect = new Elem.Select();
                 ExportSelect.DoubleClick += (s, e) => ViewInfo();
@@ -30,6 +33,13 @@ namespace gdtools {
                 ExportCompressed.Text = "Export compressed (.gmdc)";
                 ExportCompressed.AutoSize = true;
 
+                RefreshDiv = new TableLayoutPanel();
+                RefreshDiv.AutoSize = true;
+                RefreshDiv.Visible = false;
+
+                RefreshDiv.Controls.Add(new Elem.Text("After importing all you want, make sure to refresh data in order to use the app further."));
+                RefreshDiv.Controls.Add(new Elem.But("Refresh", (s, e) => Program.MainForm.FullReload()));
+
                 this.Controls.Add(ExportSelect);
                 this.Controls.Add(new Elem.But("Export Selected", (s, e) => ExportLevel()));
                 this.Controls.Add(ExportCompressed);
@@ -37,6 +47,7 @@ namespace gdtools {
                 this.Controls.Add(new Elem.SectionBreak());
                 this.Controls.Add(new Elem.NewLine());
                 this.Controls.Add(new Elem.But("Import", (s, e) => OpenImport()));
+                this.Controls.Add(RefreshDiv);
                 this.Controls.Add(ImportLeveLArea);
             }
 
@@ -64,6 +75,7 @@ namespace gdtools {
                 Elem.BorderPanel Level = new Elem.BorderPanel();
 
                 EventHandler ImportThis = (object s, EventArgs e) => {
+                    RefreshDiv.Visible = true;
                     string res = GDTools.ImportLevel(file);
                     if (res != null) MessageBox.Show($"Error: {res}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); else Level.Dispose();
                 };
@@ -81,23 +93,21 @@ namespace gdtools {
                 string Info = "";
 
                 foreach (PropertyInfo i in LevelInfo.GetType().GetProperties()) {
-                    if (i.Name != "Name" && i.Name != "Creator" && i.Name != "Description")
+                    if (i.Name != "Name" && i.Name != "Creator")
                         Info += $"{i.Name.Replace("_", " ")}: {i.GetValue(LevelInfo)}\n";
                 }
 
-                Level.Controls.Add(new Elem.Text(LevelInfo.Name));
-                Level.Controls.Add(new Elem.Text($"by {LevelInfo.Creator}"));
-                Level.Controls.Add(new Elem.Text($"\"{LevelInfo.Description}\""));
-                Level.Controls.Add(new Elem.Text($"{Info}"));
+                Level.Controls.Add(new Elem.Text($"{LevelInfo.Name} by {LevelInfo.Creator}"));
 
-                Elem.But ImportButton = new Elem.But("Import");
-                ImportButton.Click += ImportThis;
+                FlowLayoutPanel x = new FlowLayoutPanel();
+                x.AutoSize = true;
+                x.Controls.Add(new Elem.But("Info", (s, e) => {
+                    MessageBox.Show(Info, $"Info for {LevelInfo.Name}");
+                }));
+                x.Controls.Add(new Elem.But("Import", ImportThis));
+                x.Controls.Add(new Elem.But("Close", CloseThis));
 
-                Elem.But CloseButton = new Elem.But("Close");
-                CloseButton.Click += CloseThis;
-
-                Level.Controls.Add(ImportButton);
-                Level.Controls.Add(CloseButton);
+                Level.Controls.Add(x);
 
                 ImportLeveLArea.Controls.Add(Level);
             }
@@ -112,7 +122,11 @@ namespace gdtools {
 
                     if (ofd.ShowDialog() == DialogResult.OK) {
                         foreach (string file in ofd.FileNames) {
+                            Elem.MsgBox LoadInfo = new Elem.MsgBox("Loading...");
+                            LoadInfo.Show();
                             AddImport(file);
+                            LoadInfo.Close();
+                            LoadInfo.Dispose();
                         }
                     }
                 }

@@ -3,11 +3,13 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Reflection;
 using System.Drawing;
+using System.Diagnostics;
 
 namespace gdtools {
     namespace Pages {
         public class Backups : TableLayoutPanel {
             Elem.Select BackupSelect;
+            Elem.Text BackupPath;
 
             public Backups() {
                 this.Name = "Backups";
@@ -79,6 +81,8 @@ namespace gdtools {
                 BackupSelect = new Elem.Select(false);
                 BackupSelect.DoubleClick += ViewBackup;
 
+                BackupPath = new Elem.Text();
+
                 RefreshBackupList();
 
                 ContextMenuStrip CM = new ContextMenuStrip();
@@ -86,9 +90,13 @@ namespace gdtools {
                 BackupSelect.ContextMenuStrip = CM;
 
                 FlowLayoutPanel BackupControls = new FlowLayoutPanel();
-                BackupControls.Controls.Add(new Elem.But("New Backup", (s, e) => {}));
-                BackupControls.Controls.Add(new Elem.But("Import Backup", (s, e) => {}));
-                BackupControls.Controls.Add(new Elem.But("Change Directory", (s, e) => {
+                BackupControls.AutoSize = true;
+                BackupControls.Dock = DockStyle.Fill;
+                BackupControls.Controls.Add(new Elem.But("New", (s, e) => {}));
+                BackupControls.Controls.Add(new Elem.But("Import", (s, e) => {}));
+                BackupControls.Controls.Add(new Elem.But("View", ViewBackup));
+                BackupControls.Controls.Add(new Elem.NewLine());
+                BackupControls.Controls.Add(new Elem.But("Change Folder", (s, e) => {
                     using (FolderBrowserDialog ofd = new FolderBrowserDialog()) {
                         ofd.Description = "Select backup directory";
 
@@ -98,9 +106,11 @@ namespace gdtools {
                         }
                     }
                 }));
+                BackupControls.Controls.Add(new Elem.But("Open Folder", (s, e) => Process.Start("explorer.exe", GDTools._BackupDirectory)));
 
                 this.Controls.Add(BackupSelect);
                 this.Controls.Add(BackupControls);
+                this.Controls.Add(BackupPath);
             }
 
             public void RefreshBackupList() {
@@ -109,6 +119,8 @@ namespace gdtools {
                 foreach (dynamic lvl in GDTools.Backups.GetBackups()) {
                     BackupSelect.AddItem(lvl.Name);
                 }
+
+                BackupPath.Text = $"Current folder: {GDTools._BackupDirectory}";
             }
         }
     }

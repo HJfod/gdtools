@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace gdtools {
     public class GDTools {
@@ -15,8 +16,9 @@ namespace gdtools {
         private static string _LLSaveData;
         private static string _CCDirPath;
         private static List<dynamic> _LevelList;
-        private static string _BackupDirectory;
+        public static string _BackupDirectory;
         public static string _UserDataName = "userdata";
+        public static int _GDCheckLoopTime = 5000;
         public static class Ext {
             public static string Level = "gmd";
             public static string LevelAlt = "lvl";
@@ -57,7 +59,21 @@ namespace gdtools {
             GZipStream zipStream = new GZipStream(resultStream, CompressionMode.Compress);
 
             uncompressedStream.CopyTo(zipStream);
+            zipStream.Close();
             return resultStream.ToArray();
+        }
+
+        public static bool CheckIfGDIsOpen() {
+            return Process.GetProcessesByName("geometrydash").Length > 0;
+        }
+
+        public static async Task<bool> CheckGDOpenLoop() {
+            return await Task.Run<bool>(() => {
+                while (CheckIfGDIsOpen()) {
+                    Thread.Sleep(_GDCheckLoopTime);
+                }
+                return true;
+            });
         }
 
         public static string DecodeCCFile(string path, Action<string, int> callback, bool MutateVars = true) {

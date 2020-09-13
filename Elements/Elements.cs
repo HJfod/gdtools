@@ -61,7 +61,18 @@ namespace gdtools {
             }
         }
 
-        public class BorderPanel : TreeView {
+        public class PauseForm : Form {
+            public PauseForm() {
+                this.Text = "Program Paused";
+                this.Size = new Size(400, 200);
+                
+                Elem.Text InfoText = new Elem.Text("This app can not be used while GD is open.\r\n\r\nIt will automatically boot up once you close the game.");
+
+                this.Controls.Add(InfoText);
+            }
+        }
+
+        public class BorderPanel : TableLayoutPanel {
             public BorderPanel() {
                 this.AutoSize = true;
                 this.BorderStyle = BorderStyle.FixedSingle;
