@@ -65,6 +65,7 @@ namespace gdtools {
             public BorderPanel() {
                 this.AutoSize = true;
                 this.BorderStyle = BorderStyle.FixedSingle;
+                Meth.HandleTheme(this);
             }
         }
 

@@ -25,6 +25,7 @@ namespace gdtools {
             public static string Backup = "gdb";
             public static string LevelList = $".{Level}, .{LevelAlt}, .{LevelCompressed}, .{LevelZipped}";
             public static string UserData = "user";
+            public static string Filter = $"Level files (*.{LevelAlt};*.{Level};*.{LevelCompressed})|*.{LevelAlt};*.{Level};*.{LevelCompressed}|All files (*.*)|*.*";
         }
 
         private static string DecryptXOR(string str, int key) {
@@ -43,19 +44,20 @@ namespace gdtools {
             // i would once again like to thank https://github.com/gd-edit/GDAPI for being open source
             MemoryStream compressedStream = new MemoryStream(data);
             MemoryStream resultStream = new MemoryStream();
+
             GZipStream zipStream = new GZipStream(compressedStream, CompressionMode.Decompress);
 
             zipStream.CopyTo(resultStream);
             return Encoding.UTF8.GetString(resultStream.ToArray());
         }
 
-        private static string CompressGZip(Byte[] data) {
-            MemoryStream compressedStream = new MemoryStream(data);
+        private static Byte[] CompressGZip(Byte[] data) {
+            MemoryStream uncompressedStream = new MemoryStream(data);
             MemoryStream resultStream = new MemoryStream();
-            GZipStream zipStream = new GZipStream(compressedStream, CompressionMode.Compress);
+            GZipStream zipStream = new GZipStream(resultStream, CompressionMode.Compress);
 
-            zipStream.CopyTo(resultStream);
-            return Encoding.UTF8.GetString(resultStream.ToArray());
+            uncompressedStream.CopyTo(zipStream);
+            return resultStream.ToArray();
         }
 
         public static string DecodeCCFile(string path, Action<string, int> callback, bool MutateVars = true) {
@@ -213,8 +215,7 @@ namespace gdtools {
             dynamic lvl = null;
 
             if (name.IndexOf("\\") > -1) {
-                lvl = new { Data = File.ReadAllText(name), Name = "" };
-                if (!lvl.Data.StartsWith("<d>")) lvl.Data = ConvertLvlToGmd(lvl.Data);
+                lvl = new { Data = name.EndsWith(Ext.LevelCompressed) ? DecompressGZip(File.ReadAllBytes(name)) : File.ReadAllText(name), Name = "" };
             } else {
                 foreach (dynamic x in from == null ? _LevelList : from) {
                     if (x.Name == name) {
@@ -271,10 +272,10 @@ namespace gdtools {
                     string NewData = Regex.Replace(lvl.Data, @"<k>k_\d+<\/k>", "");
 
                     if (comp) {
-                        NewData = CompressGZip(Encoding.UTF8.GetBytes(NewData));
+                        File.WriteAllBytes(output, CompressGZip(Encoding.UTF8.GetBytes(NewData)));
+                    } else {
+                        File.WriteAllText(output, NewData);
                     }
-
-                    File.WriteAllText(output, NewData);
 
                     return null;
                 }
@@ -292,12 +293,12 @@ namespace gdtools {
         public static string ImportLevel(string path) {
             if (File.Exists(path)) {
                 try {
-                    string lvl = File.ReadAllText(path);
+                    string lvl = path.EndsWith(Ext.LevelCompressed) ? "" : File.ReadAllText(path);
                     string data = _LLSaveData;
 
                     if (path.EndsWith(Ext.LevelAlt)) lvl = ConvertLvlToGmd(lvl);
 
-                    if (path.EndsWith(Ext.LevelCompressed)) lvl = DecompressGZip(Encoding.UTF8.GetBytes(lvl));
+                    if (path.EndsWith(Ext.LevelCompressed)) lvl = DecompressGZip(File.ReadAllBytes(path));
                     
                     data = Regex.Replace(data, @"<k>k1<\/k><i>\d+?<\/i>", "");
                     string[] splitData = data.Split("<k>_isArr</k><t />");

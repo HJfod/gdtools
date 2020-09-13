@@ -36,21 +36,7 @@ namespace gdtools {
                 this.Controls.Add(new Elem.NewLine());
                 this.Controls.Add(new Elem.SectionBreak());
                 this.Controls.Add(new Elem.NewLine());
-                this.Controls.Add(new Elem.But("Import", (s, e) => {
-                    using (OpenFileDialog ofd = new OpenFileDialog()) {
-                        ofd.InitialDirectory = "c:\\";
-                        ofd.Filter = $"Level files (*.{GDTools.Ext.LevelAlt};*.{GDTools.Ext.Level})|*.{GDTools.Ext.LevelAlt};*.{GDTools.Ext.Level}|All files (*.*)|*.*";
-                        ofd.FilterIndex = 1;
-                        ofd.RestoreDirectory = true;
-                        ofd.Multiselect = true;
-
-                        if (ofd.ShowDialog() == DialogResult.OK) {
-                            foreach (string file in ofd.FileNames) {
-                                AddImport(file);
-                            }
-                        }
-                    }
-                }));
+                this.Controls.Add(new Elem.But("Import", (s, e) => OpenImport()));
                 this.Controls.Add(ImportLeveLArea);
             }
 
@@ -116,10 +102,10 @@ namespace gdtools {
                 ImportLeveLArea.Controls.Add(Level);
             }
 
-            private void OpenImport(object sender, EventArgs e) {
+            private void OpenImport() {
                 using (OpenFileDialog ofd = new OpenFileDialog()) {
                     ofd.InitialDirectory = "c:\\";
-                    ofd.Filter = $"Level files (*.{GDTools.Ext.LevelAlt};*.{GDTools.Ext.Level})|*.{GDTools.Ext.LevelAlt};*.{GDTools.Ext.Level}|All files (*.*)|*.*";
+                    ofd.Filter = GDTools.Ext.Filter;
                     ofd.FilterIndex = 1;
                     ofd.RestoreDirectory = true;
                     ofd.Multiselect = true;
