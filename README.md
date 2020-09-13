@@ -6,7 +6,7 @@ All of my GD tools, in one program. GDShare & More.
 
 ### For beginners:
 
-1. Download and install (.NET Core Runtime)[https://dotnet.microsoft.com/download] (Make sure to enable command-line tools if asked)
+1. Download and install [.NET Core Runtime](https://dotnet.microsoft.com/download) (Make sure to enable command-line tools if asked)
 2. Click the green `Code` button on this page and Download ZIP
 3. Unzip it to a folder you want
 4. Open Windows start menu and type in `cmd`
@@ -16,7 +16,7 @@ All of my GD tools, in one program. GDShare & More.
 
 ### For experienced elites:
 
-1. Get (.NET Core Runtime)[https://dotnet.microsoft.com/download]
+1. Get [.NET Core Runtime](https://dotnet.microsoft.com/download)
 2. Download project
 3. Navigate to folder in the command line
 4. `dotnet run`
@@ -30,7 +30,7 @@ All of my GD tools, in one program. GDShare & More.
 ### Current:
 
  * Export & Import levels
-   * Unlike (GDShare)[https://github.com/HJfod/gdshare], also supports compressing level files
+   * Unlike [GDShare](https://github.com/HJfod/gdshare), also supports compressing level files
  * View backups
 
 ### Future:
