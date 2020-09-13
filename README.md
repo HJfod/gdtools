@@ -10,7 +10,7 @@ All of my GD tools, in one program. GDShare & More.
 2. Click the green `Code` button on this page and Download ZIP
 3. Unzip it to a folder you want
 4. Open Windows start menu and type in `cmd`
-5. Type `D:` / `E:` / whatever drive the folder you unzipped to is lcoated on
+5. Type `D:` / `E:` / whatever drive the folder you unzipped to is located on
 6. Type `cd your/folder/path/here` to navigate into the folder
 7. Type `dotnet run` to run the app
 
