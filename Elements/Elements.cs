@@ -72,6 +72,37 @@ namespace gdtools {
             }
         }
 
+        public class ChooseForm : Form {
+            public event Action<string> Finish;
+
+            private void ChooseFinishEventHandler(string Fin) {}
+
+            public ChooseForm(string _Name, string[] _Buttons) {
+                Meth.HandleTheme(this);
+
+                Finish += new Action<string>(ChooseFinishEventHandler);
+
+                this.Text = _Name;
+                this.Size = new Size(250, 200);
+
+                TableLayoutPanel p = new TableLayoutPanel();
+                p.Dock = DockStyle.Fill;
+                p.AutoSize = true;
+
+                foreach (string Button in _Buttons) {
+                    But n = new But(Button);
+                    n.Click += (s, e) => {
+                        Finish(Button);
+                        this.Close();
+                    };
+                    p.Controls.Add(n);
+                }
+
+                this.Controls.Add(p);
+                this.CenterToScreen();
+            }
+        }
+
         public class BorderPanel : TableLayoutPanel {
             public BorderPanel() {
                 this.AutoSize = true;

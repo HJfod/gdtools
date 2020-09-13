@@ -92,9 +92,57 @@ namespace gdtools {
                 FlowLayoutPanel BackupControls = new FlowLayoutPanel();
                 BackupControls.AutoSize = true;
                 BackupControls.Dock = DockStyle.Fill;
-                BackupControls.Controls.Add(new Elem.But("New", (s, e) => {}));
-                BackupControls.Controls.Add(new Elem.But("Import", (s, e) => {}));
+                BackupControls.Controls.Add(new Elem.But("New", (s, e) => {
+                    GDTools.Backups.CreateNewBackup();
+                    RefreshBackupList();
+                }));
+                BackupControls.Controls.Add(new Elem.But("Import Backup", (s, e) => {
+                    Elem.ChooseForm FileOrFolder = new Elem.ChooseForm("Select backup type", new string[] {"Folder", $"Compressed file (.zip / .{GDTools.Ext.Backup})"});
+
+                    FileOrFolder.Show();
+
+                    FileOrFolder.Finish += (s) => {
+                        if (s == "Folder") {
+                            using (FolderBrowserDialog ofd = new FolderBrowserDialog()) {
+                                ofd.Description = "Select a backup folder";
+
+                                if (ofd.ShowDialog() == DialogResult.OK) {
+                                    GDTools.Backups.ImportBackup(ofd.SelectedPath);
+                                    RefreshBackupList();
+                                }
+                            }
+                        } else {
+                            using (OpenFileDialog ofd = new OpenFileDialog()) {
+                                ofd.InitialDirectory = "c:\\";
+                                ofd.Filter = GDTools.Ext.BackupFilter;
+                                ofd.FilterIndex = 1;
+                                ofd.RestoreDirectory = true;
+                                ofd.Multiselect = true;
+
+                                if (ofd.ShowDialog() == DialogResult.OK) {
+                                    foreach (string file in ofd.FileNames) {
+                                        Elem.MsgBox LoadInfo = new Elem.MsgBox("Importing...");
+                                        LoadInfo.Show();
+                                        GDTools.Backups.ImportBackup(file);
+                                        RefreshBackupList();
+                                        LoadInfo.Close();
+                                        LoadInfo.Dispose();
+                                    }
+                                }
+                            }
+                        }
+                    };
+                }));
                 BackupControls.Controls.Add(new Elem.But("View", ViewBackup));
+                BackupControls.Controls.Add(new Elem.But("Delete", (s, e) => {
+                    if (BackupSelect.SelectedItem != null) {
+                        GDTools.Backups.DeleteBackup(((Elem.Select.SelectItem)BackupSelect.SelectedItem).Text);
+                        
+                        RefreshBackupList();
+                    }
+                }));
+                BackupControls.Controls.Add(new Elem.BigNewLine());
+                BackupControls.Controls.Add(BackupPath);
                 BackupControls.Controls.Add(new Elem.NewLine());
                 BackupControls.Controls.Add(new Elem.But("Change Folder", (s, e) => {
                     using (FolderBrowserDialog ofd = new FolderBrowserDialog()) {
@@ -107,10 +155,10 @@ namespace gdtools {
                     }
                 }));
                 BackupControls.Controls.Add(new Elem.But("Open Folder", (s, e) => Process.Start("explorer.exe", GDTools._BackupDirectory)));
+                BackupControls.Controls.Add(new Elem.But("Refresh Folder", (s, e) => RefreshBackupList()));
 
                 this.Controls.Add(BackupSelect);
                 this.Controls.Add(BackupControls);
-                this.Controls.Add(BackupPath);
             }
 
             public void RefreshBackupList() {

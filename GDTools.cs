@@ -6,9 +6,9 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace gdtools {
     public class GDTools {
@@ -28,6 +28,7 @@ namespace gdtools {
             public static string LevelList = $".{Level}, .{LevelAlt}, .{LevelCompressed}, .{LevelZipped}";
             public static string UserData = "user";
             public static string Filter = $"Level files (*.{LevelAlt};*.{Level};*.{LevelCompressed})|*.{LevelAlt};*.{Level};*.{LevelCompressed}|All files (*.*)|*.*";
+            public static string BackupFilter = $"Level files (*.zip;*.{Backup})|*.zip;*.{Backup}|All files (*.*)|*.*";
         }
 
         private static string DecryptXOR(string str, int key) {
@@ -341,7 +342,7 @@ namespace gdtools {
                 bool found = false;
                 foreach (string line in File.ReadAllLines(DataPath, Encoding.UTF8)) {
                     if (line.StartsWith(key)) {
-                        NewData += $"{line.Substring(0, line.IndexOf("=") + 1)}{type}>{value}";
+                        NewData += $"{line.Substring(0, line.IndexOf("=") + 1)}{type}>{value}\n";
                         found = true;
                     } else {
                         NewData += $"{line}\n";
@@ -367,9 +368,10 @@ namespace gdtools {
                             _BackupDirectory = val;
                             break;
                         case "dark-mode":
-                            if (Int32.Parse(val) == 1) {
-                                Settings.DarkTheme = true;
-                            }
+                            Settings.DarkTheme = Int32.Parse(val) == 1 ? true : false;
+                            break;
+                        case "compress-backups":
+                            Settings.CompressBackups = Int32.Parse(val) == 1 ? true : false;
                             break;
                     }
                 }
@@ -385,10 +387,17 @@ namespace gdtools {
 
             public static List<dynamic> GetBackups() {
                 List<dynamic> res = new List<dynamic>{};
-                foreach(string file in Directory.GetDirectories(_BackupDirectory)) {
+                foreach (string file in Directory.GetDirectories(_BackupDirectory)) {
                     res.Add(new {
                         Name = file.Substring(file.LastIndexOf("\\") + 1)
                     });
+                }
+                foreach (string file in Directory.GetFiles(_BackupDirectory)) {
+                    if (file.EndsWith($".{Ext.Backup}")) {
+                        res.Add(new {
+                            Name = file.Substring(file.LastIndexOf("\\") + 1)
+                        });
+                    }
                 }
                 return res;
             }
@@ -397,8 +406,19 @@ namespace gdtools {
                 if (!path.Contains("\\")) {
                     path = $"{_BackupDirectory}\\{path}";
                 }
-                string LLdata = DecodeCCFile($"{path}\\CCLocalLevels.dat", callback == null ? (s, e) => {} : callback, false);
-                string GMdata = DecodeCCFile($"{path}\\CCGameManager.dat", callback == null ? (s, e) => {} : callback, false);
+                
+                string rem = "";
+                if (path.EndsWith($".{Ext.Backup}")) {
+                    rem = $"{_BackupDirectory}\\GDTOOLS_TEMP_{new Random().Next(1000)}";    
+                    ZipFile.ExtractToDirectory(path, rem);
+                }
+
+                if (rem != "") path = rem;
+
+                string LLdata = DecodeCCFile($"{path}\\CCLocalLevels.dat", (s, e) => {}, false);
+                string GMdata = DecodeCCFile($"{path}\\CCGameManager.dat", (s, e) => {}, false);
+
+                if (rem != "") Directory.Delete(rem, true);
 
                 return new {
                     User = GetGDUserInfo(GMdata),
@@ -410,12 +430,69 @@ namespace gdtools {
                 string prevFolder = _BackupDirectory;
                 foreach (string folder in Directory.GetDirectories(prevFolder)) {
                     if (File.Exists($"{folder}\\CCLocalLevels.dat") || File.Exists($"{folder}\\CCGameManager.dat")) {
-                        Directory.Move(folder, $"{path}\\{folder.Substring(folder.LastIndexOf("\\" + 1))}");
+                        Directory.Move(folder, $"{path}\\{folder.Substring(folder.LastIndexOf("\\") + 1)}");
+                    }
+                }
+                foreach (string file in Directory.GetFiles(_BackupDirectory)) {
+                    if (file.EndsWith($".{Ext.Backup}")) {
+                        File.Move(file, $"{path}\\{file.Substring(file.LastIndexOf("\\") + 1)}");
                     }
                 }
                 _BackupDirectory = path;
                 SaveKeyToUserData("backup-directory", _BackupDirectory);
                 return null;
+            }
+
+            public static bool CreateNewBackup() {
+                var Date = DateTime.Now;
+                string Name = $"GDTOOLS_BACKUP_{Date.Year}-{Date.Month}-{Date.Day}";
+
+                int n = 1;
+                while (Directory.Exists($"{_BackupDirectory}\\{Name}") || File.Exists($"{_BackupDirectory}\\{Name}.{Ext.Backup}")) {
+                    n++;
+                    Name = Name.Substring(0, Name.Contains('#') ? Name.IndexOf("#") : Name.Length);
+                    Name = $"{Name}#{n}";
+                }
+
+                string Path = $"{_BackupDirectory}\\{Name}";
+
+                Directory.CreateDirectory(Path);
+
+                File.Copy(GetCCPath("LocalLevels"), $"{Path}\\CCLocalLevels.dat", true);
+                File.Copy(GetCCPath("GameManager"), $"{Path}\\CCGameManager.dat", true);
+
+                if (Settings.CompressBackups) {
+                    ZipFile.CreateFromDirectory(Path, $"{Path}.{Ext.Backup}");
+                    Directory.Delete(Path, true);
+                }
+
+                return true;
+            }
+
+            public static bool DeleteBackup(string name) {
+                if (name.EndsWith($".{Ext.Backup}")) {
+                    File.Delete($"{_BackupDirectory}\\{name}");
+                } else {
+                    Directory.Delete($"{_BackupDirectory}\\{name}", true);
+                }
+
+                return true;
+            }
+
+            public static string ImportBackup(string path) {
+                if (path.EndsWith($".{Ext.Backup}") || path.EndsWith(".zip")) {
+                    File.Move(path, $"{_BackupDirectory}\\{path.Substring(path.LastIndexOf("\\") + 1, path.LastIndexOf(".") - path.LastIndexOf("\\") - 1)}.{Ext.Backup}");
+
+                    return null;
+                } else {
+                    if (File.Exists($"{path}\\CCLocalLevels.dat") || File.Exists($"{path}\\CCGameManager.dat")) {
+                        Directory.Move(path, $"{_BackupDirectory}\\{path.Substring(path.LastIndexOf("\\") + 1)}");
+
+                        return null;
+                    } else {
+                        return "This appears to not be a backup folder!";
+                    }
+                }
             }
         }
     }

@@ -22,7 +22,17 @@ namespace gdtools {
                     Program.MainForm.Reload();
                 };
 
+                CheckBox ToggleBackupCompression = new CheckBox();
+                if (Settings.CompressBackups) ToggleBackupCompression.Checked = true;
+                ToggleBackupCompression.Text = "Compress backups";
+                ToggleBackupCompression.AutoSize = true;
+                ToggleBackupCompression.Click += (s, e) => {
+                    Settings.CompressBackups = ToggleBackupCompression.Checked;
+                    GDTools.SaveKeyToUserData("compress-backups", ToggleBackupCompression.Checked ? "1" : "0");
+                };
+
                 this.Controls.Add(ToggleDarkMode);
+                this.Controls.Add(ToggleBackupCompression);
             }
         }
     }

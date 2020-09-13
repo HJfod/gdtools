@@ -15,6 +15,7 @@ namespace gdtools {
         public static string Developers = "HJfod";
         public static int AppVersionNum = 1;
         public static bool DarkTheme = false;
+        public static bool CompressBackups = true;
     }
 
     public static class Program {
