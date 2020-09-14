@@ -25,10 +25,14 @@ namespace gdtools {
             public static string LevelCompressed = "gmdc";
             public static string LevelZipped = "gmdz";
             public static string Backup = "gdb";
-            public static string LevelList = $".{Level}, .{LevelAlt}, .{LevelCompressed}, .{LevelZipped}";
+            public static string LevelList = $".{Level}, .{LevelCompressed}";
             public static string UserData = "user";
             public static string Filter = $"Level files (*.{LevelAlt};*.{Level};*.{LevelCompressed})|*.{LevelAlt};*.{Level};*.{LevelCompressed}|All files (*.*)|*.*";
             public static string BackupFilter = $"Level files (*.zip;*.{Backup})|*.zip;*.{Backup}|All files (*.*)|*.*";
+            public static dynamic ExtArray = new {
+                Levels = new string[] { Level, LevelAlt, LevelCompressed, LevelZipped },
+                Backups = new string[] { ".zip", Backup }
+            };
         }
 
         private static string DecryptXOR(string str, int key) {
@@ -409,7 +413,7 @@ namespace gdtools {
                 
                 string rem = "";
                 if (path.EndsWith($".{Ext.Backup}")) {
-                    rem = $"{_BackupDirectory}\\GDTOOLS_TEMP_{new Random().Next(1000)}";    
+                    rem = $"{_BackupDirectory}\\GDTOOLS_TEMP_{new Random().Next(1000)}";
                     ZipFile.ExtractToDirectory(path, rem);
                 }
 
@@ -493,6 +497,25 @@ namespace gdtools {
                         return "This appears to not be a backup folder!";
                     }
                 }
+            }
+
+            public static bool SwitchToBackup(string name) {
+                string path = $"{_BackupDirectory}\\{name}";
+                
+                string rem = "";
+                if (path.EndsWith($".{Ext.Backup}")) {
+                    rem = $"{_BackupDirectory}\\GDTOOLS_TEMP_{new Random().Next(1000)}";
+                    ZipFile.ExtractToDirectory(path, rem);
+                }
+
+                if (rem != "") path = rem;
+
+                File.Copy($"{path}\\CCLocalLevels.dat", GetCCPath("LocalLevels"), true);
+                File.Copy($"{path}\\CCGameManager.dat", GetCCPath("GameManager"), true);
+
+                if (rem != "") Directory.Delete(rem, true);
+
+                return true;
             }
         }
     }

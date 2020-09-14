@@ -9,5 +9,11 @@
     <PublishSingleFile>true</PublishSingleFile>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
   </PropertyGroup>
-
+  
+  <ItemGroup>
+    <None Remove="gdtools.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="gdtools.ico" />
+  </ItemGroup>
 </Project>

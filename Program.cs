@@ -11,9 +11,9 @@ namespace gdtools {
         public static Size DefaultSize = new Size(400, 450);
         public static string AppName = "GDTools";
         public static string AppVersion = "v0.1.0";
-        public static string AppBuild = "DEV-BUILD";
+        public static string AppBuild = "REL-BUILD";
         public static string Developers = "HJfod";
-        public static string IconPath = "resources\\gdtools.ico";
+        public static string IconPath = "gdtools.ico";
         public static int AppVersionNum = 1;
         public static bool DarkTheme = false;
         public static bool CompressBackups = true;

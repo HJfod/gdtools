@@ -40,13 +40,20 @@ namespace gdtools {
                 RefreshDiv.Controls.Add(new Elem.Text("After importing all you want, make sure to refresh data in order to use the app further."));
                 RefreshDiv.Controls.Add(new Elem.But("Refresh", (s, e) => Program.MainForm.FullReload()));
 
+                FlowLayoutPanel ExportControls = new FlowLayoutPanel();
+                ExportControls.AutoSize = true;
+
+                ExportControls.Controls.Add(new Elem.But("Export", (s, e) => ExportLevel(), "Exports all the level(s) you've selected on the list"));
+                ExportControls.Controls.Add(new Elem.But("View", (s, e) => ViewInfo(), "Shows info for the topmost level you've selected on the list."));
+
                 this.Controls.Add(ExportSelect);
-                this.Controls.Add(new Elem.But("Export Selected", (s, e) => ExportLevel()));
+                this.Controls.Add(ExportControls);
                 this.Controls.Add(ExportCompressed);
                 this.Controls.Add(new Elem.NewLine());
+                this.Controls.Add(new Elem.But("Help", (s, e) => Pages.SettingPage.ShowHelp("share")));
                 this.Controls.Add(new Elem.SectionBreak());
                 this.Controls.Add(new Elem.NewLine());
-                this.Controls.Add(new Elem.But("Import", (s, e) => OpenImport()));
+                this.Controls.Add(new Elem.But("Import", (s, e) => OpenImport(), "Opens a file browsing dialog where you can select level(s) to add to imports."));
                 this.Controls.Add(RefreshDiv);
                 this.Controls.Add(ImportLeveLArea);
             }
@@ -84,7 +91,7 @@ namespace gdtools {
 
                 ContextMenuStrip CM = new ContextMenuStrip();
                 CM.Items.Add(new ToolStripMenuItem("Import", null, ImportThis ));
-                CM.Items.Add(new ToolStripMenuItem("Close", null, CloseThis ));
+                CM.Items.Add(new ToolStripMenuItem("Cancel", null, CloseThis ));
 
                 Level.ContextMenuStrip = CM;
 

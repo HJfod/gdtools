@@ -79,7 +79,7 @@ namespace gdtools {
 
             private void ChooseFinishEventHandler(string Fin) {}
 
-            public ChooseForm(string _Name, string[] _Buttons) {
+            public ChooseForm(string _Name, string[] _Buttons, string _Text = null) {
                 Meth.HandleTheme(this);
 
                 Finish += new Action<string>(ChooseFinishEventHandler);
@@ -88,9 +88,12 @@ namespace gdtools {
                 this.Size = new Size(250, 200);
                 this.Icon = new Icon(Settings.IconPath);
 
-                TableLayoutPanel p = new TableLayoutPanel();
+                FlowLayoutPanel p = new FlowLayoutPanel();
                 p.Dock = DockStyle.Fill;
                 p.AutoSize = true;
+
+                if (_Text != null) 
+                    p.Controls.Add(new Elem.Text(_Text));
 
                 foreach (string Button in _Buttons) {
                     But n = new But(Button);
@@ -123,12 +126,19 @@ namespace gdtools {
         }
 
         public class But : Button {
-            public But(string _Text = "", EventHandler _Click = null) {
+            public But(string _Text = "", EventHandler _Click = null, string _HelpText = null) {
                 Meth.HandleTheme(this);
                 this.AutoSize = true;
                 this.FlatStyle = FlatStyle.Flat;
                 if (_Text != "") this.Text = _Text;
                 if (_Click != null) this.Click += _Click;
+                if (_HelpText != null) {
+                    ContextMenuStrip CM = new ContextMenuStrip();
+                    CM.Items.Add(new ToolStripMenuItem("What does this button do?", null, (s, e) => {
+                        MessageBox.Show(_HelpText, "Button Help");
+                    }));
+                    this.ContextMenuStrip = CM;
+                }
             }
         }
         
