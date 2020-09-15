@@ -15,7 +15,7 @@ namespace gdtools {
         private static string _GMSaveData;
         private static string _LLSaveData;
         private static string _CCDirPath;
-        private static List<dynamic> _LevelList;
+        private static List<dynamic> _LevelList = new List<dynamic> {};
         public static string _BackupDirectory;
         public static string _UserDataName = "userdata";
         public static int _GDCheckLoopTime = 5000;
@@ -181,7 +181,10 @@ namespace gdtools {
         }
 
         public static List<dynamic> GetLevelList(string savedata = null, Action<string, int> callback = null) {
-            if (savedata == null) savedata = _LLSaveData;
+            if (savedata == null) {
+                if (_LevelList.Count > 0) return _LevelList;
+                savedata = _LLSaveData;
+            }
 
             Stopwatch watch = new Stopwatch();
             watch.Start();

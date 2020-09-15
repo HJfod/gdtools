@@ -43,8 +43,8 @@ namespace gdtools {
 
                     Help.Finish += s => {
                         switch (s) {
-                            case "Exporting / Importing levels": ShowHelp("share"); break;
-                            case "Backups": ShowHelp("backups"); break;
+                            case 0: ShowHelp("share"); break;
+                            case 1: ShowHelp("backups"); break;
                         }
                     };
                 }));

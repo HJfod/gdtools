@@ -104,6 +104,7 @@ namespace gdtools {
                     new Pages.User(),
                     new Pages.Share(),
                     new Pages.Backups(),
+                    new Pages.Collabs(),
                     new Pages.SettingPage()
                 };
                 

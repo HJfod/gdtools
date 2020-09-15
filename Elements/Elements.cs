@@ -75,14 +75,14 @@ namespace gdtools {
         }
 
         public class ChooseForm : Form {
-            public event Action<string> Finish;
+            public event Action<int> Finish;
 
-            private void ChooseFinishEventHandler(string Fin) {}
+            private void ChooseFinishEventHandler(int Fin) {}
 
             public ChooseForm(string _Name, string[] _Buttons, string _Text = null) {
                 Meth.HandleTheme(this);
 
-                Finish += new Action<string>(ChooseFinishEventHandler);
+                Finish += new Action<int>(ChooseFinishEventHandler);
 
                 this.Text = _Name;
                 this.Size = new Size(250, 200);
@@ -95,13 +95,17 @@ namespace gdtools {
                 if (_Text != null) 
                     p.Controls.Add(new Elem.Text(_Text));
 
+                int i = 0;
                 foreach (string Button in _Buttons) {
                     But n = new But(Button);
+                    int ix = i;
                     n.Click += (s, e) => {
-                        Finish(Button);
+                        Finish(ix);
                         this.Close();
+                        this.Dispose();
                     };
                     p.Controls.Add(n);
+                    i++;
                 }
 
                 this.Controls.Add(p);

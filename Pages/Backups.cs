@@ -105,9 +105,9 @@ namespace gdtools {
                     BackupCurrent.Show();
 
                     BackupCurrent.Finish += (s) => {
-                        if (s == "Cancel") return;
+                        if (s == 2) return;
                         if (BackupSelect.SelectedItem != null) {
-                            if (s == "Yes")
+                            if (s == 0)
                                 GDTools.Backups.CreateNewBackup();
                         
                             GDTools.Backups.SwitchToBackup(((Elem.Select.SelectItem)BackupSelect.SelectedItem).Text);
@@ -123,7 +123,7 @@ namespace gdtools {
                         Y.Show();
 
                         Y.Finish += s => {
-                            if (s != "Yes") return;
+                            if (s != 0) return;
 
                             GDTools.Backups.DeleteBackup(((Elem.Select.SelectItem)BackupSelect.SelectedItem).Text);
                             
@@ -142,7 +142,7 @@ namespace gdtools {
                     FileOrFolder.Show();
 
                     FileOrFolder.Finish += (s) => {
-                        if (s == "Folder") {
+                        if (s == 0) {
                             using (FolderBrowserDialog ofd = new FolderBrowserDialog()) {
                                 ofd.Description = "Select a backup folder";
 
