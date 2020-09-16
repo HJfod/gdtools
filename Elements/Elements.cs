@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace gdtools {
     public static class Meth {
@@ -12,6 +13,9 @@ namespace gdtools {
                 obj.ForeColor = Color.Black;
                 if (!_noback) obj.BackColor = Color.White;
             }
+        }
+        public static int _S(int Size) {
+            return (int)((float)Size * Settings.AppScale);
         }
     }
     namespace Elem {
@@ -25,8 +29,8 @@ namespace gdtools {
                 this.SelectionMode = _Multi ? SelectionMode.MultiSimple : SelectionMode.One;
                 this.DisplayMember = "Text";
                 this.ValueMember = "Text";
-                this.Width = 300;
-                this.Height = 100;
+                this.Width = Meth._S(300);
+                this.Height = Meth._S(100);
                 Meth.HandleTheme(this);
             }
 
@@ -45,7 +49,7 @@ namespace gdtools {
 
             public MsgBox(string _msg = "") {
                 this.Text = _msg;
-                this.Size = new Size(120,80);
+                this.Size = new Size(Meth._S(120),Meth._S(80));
                 this.MinimizeBox = false;
                 this.MaximizeBox = false;
                 this.Icon = new Icon(Settings.IconPath);
@@ -65,7 +69,7 @@ namespace gdtools {
         public class PauseForm : Form {
             public PauseForm() {
                 this.Text = "Program Paused";
-                this.Size = new Size(400, 200);
+                this.Size = new Size(Meth._S(400), Meth._S(200));
                 this.Icon = new Icon(Settings.IconPath);
                 
                 Elem.Text InfoText = new Elem.Text("This app can not be used while GD is open.\r\n\r\nIt will automatically boot up once you close the game.");
@@ -85,7 +89,7 @@ namespace gdtools {
                 Finish += new Action<int>(ChooseFinishEventHandler);
 
                 this.Text = _Name;
-                this.Size = new Size(250, 200);
+                this.Size = new Size(Meth._S(250), Meth._S(200));
                 this.Icon = new Icon(Settings.IconPath);
 
                 FlowLayoutPanel p = new FlowLayoutPanel();
@@ -145,6 +149,14 @@ namespace gdtools {
                 }
             }
         }
+
+        public class Link : LinkLabel {
+            public Link(string _Text, string _Link) {
+                this.AutoSize = true;
+                this.Text = _Text;
+                this.LinkClicked += (s, e) => Process.Start("explorer.exe", _Link);
+            }
+        }
         
         public class NewLine : Panel {
             public NewLine() {
@@ -170,6 +182,17 @@ namespace gdtools {
                 this.Anchor = AnchorStyles.Left | AnchorStyles.Right;
                 this.Width = Settings.DefaultSize.Width;
                 this.Height = 30;
+            }
+        }
+
+        public class Div : FlowLayoutPanel {
+            public Div(Control[] _Controls) {
+                this.AutoSize = true;
+                this.Dock = DockStyle.Fill;
+
+                foreach (Control c in _Controls) {
+                    this.Controls.Add(c);
+                }
             }
         }
     }

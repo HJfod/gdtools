@@ -20,8 +20,13 @@ namespace gdtools {
 
     public partial class Main : Form {
         public Main() {
+            Settings.AppScale = ( (new Elem.NewLine()).CreateGraphics().DpiX / 96 );
+
             this.Text = $"{Settings.AppName} {Settings.AppVersion}";
-            this.Size = Settings.DefaultSize;
+            this.Size = new Size(
+                Meth._S(Settings.DefaultSize.Width),
+                Meth._S(Settings.DefaultSize.Height)
+            );
             this.Icon = new Icon(Settings.IconPath);
 
             this.CenterToScreen();
