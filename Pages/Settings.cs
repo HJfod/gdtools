@@ -44,6 +44,9 @@ namespace gdtools {
 
                 this.Controls.Add(ToggleDarkMode);
                 this.Controls.Add(ToggleBackupCompression);
+
+                this.Controls.Add(new Elem.BigNewLine());
+
                 this.Controls.Add(new Elem.But("Check for updates", (s, e) => {
                     try {
                         string url = "https://api.github.com/repos/HJfod/gdtools/releases/latest";
@@ -106,6 +109,10 @@ namespace gdtools {
                         }
                     };
                 }));
+                this.Controls.Add(new Elem.But("Reload app", (s, e) => Program.MainForm.FullReload()));
+                
+                this.Controls.Add(new Elem.BigNewLine());
+                
                 this.Controls.Add(new Elem.Text("In case you need specific help,\r\nmessage HJfod on Discord at HJfod#1795.\r\n"));
 
                 this.Controls.Add(new Elem.Link("Support server", "https://discord.gg/ZvV7zjj"));

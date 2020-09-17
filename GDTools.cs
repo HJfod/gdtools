@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
@@ -386,6 +386,10 @@ namespace gdtools {
             return true;
         }
 
+        public static string Merge(string _base, List<string> _parts) {
+            return "";
+        }
+
         public class Backups {
             public static bool InitBackups() {
                 if (_BackupDirectory == null) _BackupDirectory = GetCCPath("");
@@ -395,9 +399,11 @@ namespace gdtools {
             public static List<dynamic> GetBackups() {
                 List<dynamic> res = new List<dynamic>{};
                 foreach (string file in Directory.GetDirectories(_BackupDirectory)) {
-                    res.Add(new {
-                        Name = file.Substring(file.LastIndexOf("\\") + 1)
-                    });
+                    if (File.Exists($"{file}\\CCLocalLevels.dat") || File.Exists($"{file}\\CCGameManager.dat")) {
+                        res.Add(new {
+                            Name = file.Substring(file.LastIndexOf("\\") + 1)
+                        });
+                    }
                 }
                 foreach (string file in Directory.GetFiles(_BackupDirectory)) {
                     if (file.EndsWith($".{Ext.Backup}")) {

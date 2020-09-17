@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Collections.Generic;
 
 namespace gdtools {
     namespace Pages {
@@ -9,7 +10,7 @@ namespace gdtools {
             public Elem.Text MergeBase;
 
             public Collabs() {
-                this.Name = "Collabs";
+                this.Name = "Collab";
                 this.Dock = DockStyle.Fill;
                 Meth.HandleTheme(this);
 
@@ -21,7 +22,7 @@ namespace gdtools {
 
                 MergeControls.Controls.Add(new Elem.But("Set base", (s, e) => {
                     Elem.ChooseForm Select = new Elem.ChooseForm("Select base source",
-                    new string[] { "Add base from file", "Add base from local levels" });
+                    new string[] { "Set base from file", "Set base from local levels" });
 
                     Select.Show();
 
@@ -70,9 +71,9 @@ namespace gdtools {
                         }
                     };
                 }));
-                MergeControls.Controls.Add(new Elem.But("Add part", (s, e) => {
+                MergeControls.Controls.Add(new Elem.But("Add part(s)", (s, e) => {
                     Elem.ChooseForm Select = new Elem.ChooseForm("Select part source",
-                    new string[] { "Add part from file", "Add part from local levels" });
+                    new string[] { "Add part(s) from file", "Add part(s) from local levels" });
 
                     Select.Show();
 
@@ -101,11 +102,12 @@ namespace gdtools {
                             Choose.Size = new Size(400, 300);
                             Meth.HandleTheme(Choose);
 
-                            Elem.Select ExportSelect = new Elem.Select(false);
+                            Elem.Select ExportSelect = new Elem.Select();
 
                             EventHandler Pick = (s, e) => {
-                                if (ExportSelect.SelectedItem == null) return;
-                                AddMerge(((Elem.Select.SelectItem)ExportSelect.SelectedItem).Text);
+                                if (ExportSelect.SelectedItems[0] == null) return;
+                                foreach (Elem.Select.SelectItem x in ExportSelect.SelectedItems)
+                                    AddMerge(x.Text);
                                 Choose.Close();
                                 Choose.Dispose();
                             };
@@ -115,18 +117,41 @@ namespace gdtools {
                             foreach (dynamic lvl in GDTools.GetLevelList())
                                 ExportSelect.AddItem(lvl.Name);
 
-                            Choose.Controls.Add(ExportSelect);
+                            Choose.Controls.Add(new Elem.Div(new Control[] {
+                                ExportSelect,
+                                new Elem.But("Select", Pick)
+                            }));
 
                             Choose.Show();
                         }
                     };
                 }));
-                MergeControls.Controls.Add(new Elem.But("Merge"));
+                MergeControls.Controls.Add(new Elem.But("Merge", (s, e) => {
+                    string err = MergeParts();
+                    if (err.Length > 0) MessageBox.Show(err, "Error merging");
+                }));
 
-                this.Controls.Add(new Elem.Text($"Collabing tools"));
+                this.Controls.Add(new Elem.Text("Part merging"));
                 this.Controls.Add(MergeList);
                 this.Controls.Add(MergeBase);
                 this.Controls.Add(MergeControls);
+            }
+
+            public string MergeParts() {
+                try {
+                    if (MergeBase.Text == "Base not selected") return "No base selected!";
+
+                    if (MergeList.Items.Count == 0) return "No parts to merge!";
+
+                    List<string> parts = new List<string> {};
+                    foreach (Elem.Select.SelectItem x in MergeList.Items) parts.Add(x.Text);
+                    string err = GDTools.Merge(MergeBase.Text.Substring("Base: ".Length), parts);
+                    if (err.Length > 0) return err;
+
+                    MessageBox.Show("Succesfully merged! :)");
+
+                    return "";
+                } catch (Exception e) { MessageBox.Show(e.ToString(), "Error"); return e.ToString(); }
             }
 
             public void AddMerge(string _LevelName) {
