@@ -8,6 +8,7 @@ namespace gdtools {
         public class Collabs : TableLayoutPanel {
             public Elem.Select MergeList;
             public Elem.Text MergeBase;
+            public bool MergeLink = false;
 
             public Collabs() {
                 this.Name = "Collab";
@@ -126,15 +127,26 @@ namespace gdtools {
                         }
                     };
                 }));
+                MergeControls.Controls.Add(new Elem.But("Remove part", (s, e) => {
+                    if (MergeList.SelectedItem == null) return;
+                    MergeList.Items.Remove(MergeList.SelectedItem);
+                }));
                 MergeControls.Controls.Add(new Elem.But("Merge", (s, e) => {
                     string err = MergeParts();
                     if (err.Length > 0) MessageBox.Show(err, "Error merging");
                 }));
 
+                CheckBox MergeLinkToggle = new CheckBox();
+                MergeLinkToggle.Text = "Link part objects";
+                MergeLinkToggle.AutoSize = true;
+                MergeLinkToggle.Click += (s, e) =>
+                    MergeLink = MergeLinkToggle.Checked;
+
                 this.Controls.Add(new Elem.Text("Part merging"));
                 this.Controls.Add(MergeList);
                 this.Controls.Add(MergeBase);
                 this.Controls.Add(MergeControls);
+                this.Controls.Add(MergeLinkToggle);
             }
 
             public string MergeParts() {
@@ -145,7 +157,7 @@ namespace gdtools {
 
                     List<string> parts = new List<string> {};
                     foreach (Elem.Select.SelectItem x in MergeList.Items) parts.Add(x.Text);
-                    string err = GDTools.Merge(MergeBase.Text.Substring("Base: ".Length), parts);
+                    string err = GDTools.Merge(MergeBase.Text.Substring("Base: ".Length), parts, MergeLink);
                     if (err.Length > 0) return err;
 
                     MessageBox.Show("Succesfully merged! :)");

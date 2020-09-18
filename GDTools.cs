@@ -34,6 +34,7 @@ namespace gdtools {
                 Backups = new string[] { ".zip", Backup }
             };
         }
+        public struct Nullable<T> where T : struct {}
 
         private static string DecryptXOR(string str, int key) {
             byte[] xor = Encoding.UTF8.GetBytes(str);
@@ -386,8 +387,153 @@ namespace gdtools {
             return true;
         }
 
-        public static string Merge(string _base, List<string> _parts) {
-            return "";
+        public static string GetLevelData(string _path) {
+            string res = null;
+            if (_path.Contains('\\')) {
+                res = File.ReadAllText(_path);
+            } else {
+                foreach (dynamic lvl in _LevelList) {
+                    if (lvl.Name == _path) {
+                        res = lvl.Data;
+                        break;
+                    }
+                }
+            }
+            return res;
+        }
+
+        public static string DecodeLevelData(string _data) {
+            return DecompressGZip(
+                DecryptBase64(
+                    _data.Replace("-", "+").Replace("_", "/").Replace("\0", string.Empty)
+                )
+            );
+        }
+
+        public static string GetStartKey(string _data, string key) {
+            Match m_off = Regex.Match(_data, $"{key},.*?,", RegexOptions.None, Regex.InfiniteMatchTimeout);
+            return m_off.Value == null ? "" : m_off.Value.Substring(
+                m_off.Value.IndexOf(",") + 1,
+                m_off.Value.LastIndexOf(",") - m_off.Value.IndexOf(",") - 1
+            );
+        }
+
+        public static string GetObjectKey(string _obj, string _key) {
+            string[] obj_data = _obj.Split(",");
+            for (int i = 0; i < obj_data.Length; i += 2)
+                if (obj_data[i] == _key) return obj_data[i+1];
+            return null;
+        }
+ 
+        public static List<dynamic> GetObjectsByKey(string _data, string _key = null, string _val = null) {
+            List<dynamic> res_obj = new List<dynamic> {};
+            ulong ix = 0;
+            foreach (string obj in _data.Substring(_data.IndexOf(";")).Split(";")) {
+                string[] obj_data = obj.Split(",");
+                for (int i = 0; i < obj_data.Length; i += 2) {
+                    if (_key != null) {
+                        if (obj_data[i] == _key) {
+                            if (_val != null) {
+                                if (_val.StartsWith("ARR_")) {
+                                    foreach (string val in _val.Substring(4).Split("_")) {
+                                        if (obj_data[i+1] == val) {
+                                            res_obj.Add(new { Index = ix, Data = obj });
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    if (obj_data[i+1] == _val) {
+                                        res_obj.Add(new { Index = ix, Data = obj });
+                                        break;
+                                    }
+                                }
+                            } else {
+                                res_obj.Add(new { Index = ix, Data = obj });
+                                break;
+                            }
+                        }
+                    } else {
+                        res_obj.Add(new { Index = ix, Data = obj });
+                        break;
+                    }
+                }
+                ix++;
+            }
+            return res_obj;
+        }
+
+        public static string Merge(string _base, List<string> _parts, bool _link) {
+            string base_data = GetLevelData(_base);
+            if (base_data == null) return "Base level not found!";
+            base_data = DecodeLevelData(GetKey(base_data, "k4"));
+
+            float base_song_offset = 
+                GetStartKey(base_data, "kA13") == null ? 0F : float.Parse(GetStartKey(base_data, "kA13"));
+
+            List<string> errors = new List<string> {};
+
+            foreach (string part in _parts) {
+                string part_data = GetLevelData(part);
+                if (part_data == null) errors.Add($"Part {part} not found");
+                else {
+                    part_data = DecodeLevelData(GetKey(part_data, "k4"));
+                    
+                    float part_song_offset =
+                        GetStartKey(part_data, "kA13") == null ? 0F : float.Parse(GetStartKey(part_data, "kA13"));
+
+                    // object link reference: 108 => [id]
+                    // speed portal ids: 200 (.807), 201 (1.0), 202 (1.243), 203 (1.502), 1334 (1.849)
+                    // 10.386 blocks / s
+                    // unchecked portal: 13 => 0
+
+                    Console.WriteLine(GetStartKey(base_data, "kA4"));
+
+                    double base_length = 
+                        double.Parse(GetObjectKey(GetObjectsByKey(base_data).Last().Data, "2"));
+                    double part_position = (part_song_offset - base_song_offset) * 10.386; // normal speed is 10.386;
+
+                    dynamic[] speed_portals = GetObjectsByKey(base_data, "1",
+                        "ARR_200_201_202_203_1334"  // i spent so much time trying to
+                                                    // figure out how the hell i make
+                                                    // a function that accepts either
+                                                    // string or string[] as args and
+                                                    // came to the conclusion that this
+                                                    // is the easiest way
+                    ).Where(o => GetObjectKey(o.Data, "13") == "1").ToArray();
+
+                    for (int i = 0; i < speed_portals.Length; i++) {
+                        double pos = double.Parse(GetObjectKey(speed_portals[i].Data, "2"));
+                        double dis;
+
+                        if (i == speed_portals.Length)
+                            dis = base_length - pos;
+                        else
+                            dis = double.Parse(GetObjectKey(speed_portals[i+1].Data, "2")) - pos;
+                        
+                        switch (GetObjectKey(speed_portals[i], "1")) {
+                            case "200":
+                                dis = dis * .807d;
+                                break;
+                        /*  case "201":
+                                dis = dis * 1.0;
+                                break;              */
+                            case "202":
+                                dis = dis * 1.243d;
+                                break;
+                            case "203":
+                                dis = dis * 1.502d;
+                                break;
+                            case "1334":
+                                dis = dis * 1.849d;
+                                break;
+                        }
+
+                        part_position += dis;
+                    }
+                }
+            }
+            
+            return errors.Count > 0 ? $"List of errors:\n{String.Join("\n", errors)}" : "";
         }
 
         public class Backups {
