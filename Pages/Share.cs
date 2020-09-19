@@ -25,7 +25,7 @@ namespace gdtools {
                 ExportSelect = new Elem.Select();
                 ExportSelect.DoubleClick += (s, e) => ViewInfo();
 
-                foreach (dynamic lvl in GDTools.GetLevelList()) {
+                foreach (dynamic lvl in GDTools.GetLevelList(null, null, true)) {
                     ExportSelect.AddItem(lvl.Name);
                 }
 

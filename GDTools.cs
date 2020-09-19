@@ -48,6 +48,10 @@ namespace gdtools {
             return Convert.FromBase64String(istr);
         }
 
+        private static string EncryptBase64(Byte[] istr) {
+            return Convert.ToBase64String(istr);
+        }
+
         private static string DecompressGZip(Byte[] data) {
             // i would once again like to thank https://github.com/gd-edit/GDAPI for being open source
             MemoryStream compressedStream = new MemoryStream(data);
@@ -140,7 +144,7 @@ namespace gdtools {
             return $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\..\\Local\\GeometryDash\\CC{which}.dat";
         }
 
-        private static string GetKey(string savedata, string key, string type = ".*?", bool legacy = false) {
+        private static string GetKey(string savedata, string key, string type = ".*?") {
             if (type == null) {
                 Match match = Regex.Match(savedata, $"<k>{key}</k>.*?>", RegexOptions.None, Regex.InfiniteMatchTimeout);
                 if (match.Value != "") {
@@ -149,6 +153,7 @@ namespace gdtools {
                     return "False";
                 }
             }
+
             string actualTypeMatch = Regex.Match(savedata, $"<k>{key}</k><{type}>", RegexOptions.None, Regex.InfiniteMatchTimeout).Value;
             if (actualTypeMatch == "") return "";
             string actualType = actualTypeMatch.Substring(actualTypeMatch.LastIndexOf("<")+1, 1);
@@ -156,6 +161,15 @@ namespace gdtools {
             string matcher = $"<k>{key}</k><{actualType}>.*?</{actualType}>";
             Match m = Regex.Match(savedata, matcher, RegexOptions.None, Regex.InfiniteMatchTimeout);
             return m.Value == "" ? "" : m.Value.Substring($"<k>{key}</k><A>".Length, m.Value.Length - $"<k>{key}</k><A>".Length - $"</A>".Length);
+        }
+
+        private static string SetKey(string _data, string _key, string _val) {
+            if (Regex.Match(_data, $"<k>{_key}</k><.*?>", RegexOptions.None, Regex.InfiniteMatchTimeout).Value == "") return _data;
+
+            string actualTypeMatch = Regex.Match(_data, $"<k>{_key}</k><.*?>", RegexOptions.None, Regex.InfiniteMatchTimeout).Value;
+            string actualType = actualTypeMatch.Substring(actualTypeMatch.LastIndexOf("<") + 1, 1);
+
+            return Regex.Replace(_data, $"<k>{_key}</k><{actualType}>.*?</{actualType}>", $"<k>{_key}</k><{actualType}>{_val}</{actualType}>");
         }
         
         public static dynamic GetGDUserInfo(string savedata) {
@@ -181,9 +195,9 @@ namespace gdtools {
             };
         }
 
-        public static List<dynamic> GetLevelList(string savedata = null, Action<string, int> callback = null) {
+        public static List<dynamic> GetLevelList(string savedata = null, Action<string, int> callback = null, bool _reload = false) {
             if (savedata == null) {
-                if (_LevelList.Count > 0) return _LevelList;
+                if (_LevelList.Count > 0 && _reload == false) return _LevelList;
                 savedata = _LLSaveData;
             }
 
@@ -315,10 +329,16 @@ namespace gdtools {
             return lvl;
         }
 
-        public static string ImportLevel(string path) {
-            if (File.Exists(path)) {
+        public static string ImportLevel(string path, bool _inputdata = false) {
+            if (File.Exists(path) || _inputdata == true) {
                 try {
-                    string lvl = path.EndsWith(Ext.LevelCompressed) ? "" : File.ReadAllText(path);
+                    string lvl;
+
+                    if (_inputdata)
+                        lvl = path;
+                    else
+                        lvl = path.EndsWith(Ext.LevelCompressed) ? "" : File.ReadAllText(path);
+
                     string data = _LLSaveData;
 
                     if (path.EndsWith(Ext.LevelAlt)) lvl = ConvertLvlToGmd(lvl);
@@ -328,7 +348,7 @@ namespace gdtools {
                     data = Regex.Replace(data, @"<k>k1<\/k><i>\d+?<\/i>", "");
                     string[] splitData = data.Split("<k>_isArr</k><t />");
                     splitData[1] = Regex.Replace(splitData[1], @"<k>k_(\d+)<\/k><d><k>kCEK<\/k>",
-                    (Match m) => $"<k>k_{(Int32.Parse((Regex.Match(m.Value, @"k_\d+").Value.Substring(2))) + 1)}</k><d><k>kCEK</k>");
+                    m => $"<k>k_{(Int32.Parse((Regex.Match(m.Value, @"k_\d+").Value.Substring(2))) + 1)}</k><d><k>kCEK</k>");
                     data = splitData[0] + "<k>_isArr</k><t /><k>k_0</k>" + lvl + splitData[1];
 
                     File.WriteAllText($"{_CCDirPath}\\CCLocalLevels.dat", data);
@@ -410,9 +430,17 @@ namespace gdtools {
             );
         }
 
+        public static string EncodeLevelData(string _data) {
+            return EncryptBase64(
+                CompressGZip(
+                    Encoding.UTF8.GetBytes(_data)
+                )
+            ).Replace("+", "-").Replace("/", "_");
+        }
+
         public static string GetStartKey(string _data, string key) {
             Match m_off = Regex.Match(_data, $"{key},.*?,", RegexOptions.None, Regex.InfiniteMatchTimeout);
-            return m_off.Value == null ? "" : m_off.Value.Substring(
+            return m_off.Value == "" ? "" : m_off.Value.Substring(
                 m_off.Value.IndexOf(",") + 1,
                 m_off.Value.LastIndexOf(",") - m_off.Value.IndexOf(",") - 1
             );
@@ -423,6 +451,13 @@ namespace gdtools {
             for (int i = 0; i < obj_data.Length; i += 2)
                 if (obj_data[i] == _key) return obj_data[i+1];
             return null;
+        }
+
+        public static string SetObjectKey(string _obj, string _key, string _val) {
+            string[] obj_data = _obj.Split(",");
+            for (int i = 0; i < obj_data.Length; i += 2)
+                if (obj_data[i] == _key) obj_data[i+1] = _val;
+            return string.Join(",", obj_data);
         }
  
         public static List<dynamic> GetObjectsByKey(string _data, string _key = null, string _val = null) {
@@ -463,16 +498,33 @@ namespace gdtools {
         }
 
         public static string Merge(string _base, List<string> _parts, bool _link) {
-            string base_data = GetLevelData(_base);
-            if (base_data == null) return "Base level not found!";
-            base_data = DecodeLevelData(GetKey(base_data, "k4"));
+            string base_level = GetLevelData(_base);
+            if (base_level == null) return "Base level not found!";
+            string base_data = DecodeLevelData(GetKey(base_level, "k4"));
+
+            string new_base_data = base_data;
 
             float base_song_offset = 
                 GetStartKey(base_data, "kA13") == null ? 0F : float.Parse(GetStartKey(base_data, "kA13"));
+            
+            dynamic[] speed_portals = GetObjectsByKey(base_data, "1",
+                "ARR_200_201_202_203_1334"  // i spent so much time trying to
+                                            // figure out how the hell i make
+                                            // a function that accepts either
+                                            // string or string[] as args and
+                                            // came to the conclusion that this
+                                            // is the easiest way
+            ).Where(o => GetObjectKey(o.Data, "13") == "1").ToArray();
+
+            int link_id = 1;
+
+            if (_link) foreach (dynamic obj in GetObjectsByKey(base_data, "108")) link_id++;
 
             List<string> errors = new List<string> {};
 
             foreach (string part in _parts) {
+                if (part == _base) continue;
+
                 string part_data = GetLevelData(part);
                 if (part_data == null) errors.Add($"Part {part} not found");
                 else {
@@ -486,31 +538,40 @@ namespace gdtools {
                     // 10.386 blocks / s
                     // unchecked portal: 13 => 0
 
-                    Console.WriteLine(GetStartKey(base_data, "kA4"));
+                    List<dynamic> part_obj = GetObjectsByKey(part_data);
 
                     double base_length = 
-                        double.Parse(GetObjectKey(GetObjectsByKey(base_data).Last().Data, "2"));
-                    double part_position = (part_song_offset - base_song_offset) * 10.386; // normal speed is 10.386;
-
-                    dynamic[] speed_portals = GetObjectsByKey(base_data, "1",
-                        "ARR_200_201_202_203_1334"  // i spent so much time trying to
-                                                    // figure out how the hell i make
-                                                    // a function that accepts either
-                                                    // string or string[] as args and
-                                                    // came to the conclusion that this
-                                                    // is the easiest way
-                    ).Where(o => GetObjectKey(o.Data, "13") == "1").ToArray();
+                        double.Parse(GetObjectKey(part_obj[part_obj.Count - 2].Data, "2"));
+                
+                    double part_position = 0d; //(part_song_offset - base_song_offset) * 10.386; // normal speed is 10.386;
 
                     for (int i = 0; i < speed_portals.Length; i++) {
                         double pos = double.Parse(GetObjectKey(speed_portals[i].Data, "2"));
                         double dis;
+                        bool b = false;
 
-                        if (i == speed_portals.Length)
-                            dis = base_length - pos;
-                        else
-                            dis = double.Parse(GetObjectKey(speed_portals[i+1].Data, "2")) - pos;
+                        if (pos > (part_song_offset - base_song_offset) * 10.386d * 30) {    // * 10.386d = blocks / s, * 30 = block size
+                            dis = (part_song_offset - base_song_offset) * 10.386d * 30 - pos;
+
+                            b = true;
+                        } else {
+                            if (i == speed_portals.Length - 1)
+                                dis = base_length - pos;
+                            else
+                                dis = double.Parse(GetObjectKey(speed_portals[i+1].Data, "2")) - pos;
+                        }
                         
-                        switch (GetObjectKey(speed_portals[i], "1")) {
+                        if (i == 0) {
+                            switch (GetStartKey(part_data, "kA4")) {
+                                case "0": part_position += pos * .807d;     break;
+                            //  case "1": part_position += pos * 1.0d;      break;
+                                case "2": part_position += pos * 1.243d;    break;
+                                case "3": part_position += pos * 1.502d;    break;
+                                case "4": part_position += pos * 1.849d;    break;
+                            }
+                        }
+                        
+                        switch (GetObjectKey(speed_portals[i].Data, "1")) {
                             case "200":
                                 dis = dis * .807d;
                                 break;
@@ -528,11 +589,38 @@ namespace gdtools {
                                 break;
                         }
 
+                        if (b) break;
+
                         part_position += dis;
                     }
+
+                    string new_part_data = "";
+
+                    foreach (dynamic obj in part_obj) {
+                        if (obj.Data == "") continue;
+
+                        new_part_data += SetObjectKey(obj.Data, "2", 
+                            (double.Parse(GetObjectKey(obj.Data, "2")) + part_position).ToString()
+                        ) + (_link ? $",108,{link_id}" : "") + ";";
+                    }
+
+                    if (_link) link_id++;
+
+                    new_base_data += new_part_data;
                 }
             }
-            
+
+            new_base_data = SetKey(
+                SetKey(base_level, "k4", EncodeLevelData(new_base_data)),
+                "k2", $"MERGE@{GetKey(base_level, "k2")}"
+            );
+
+            new_base_data = Regex.Replace(new_base_data, @"<k>k_\d+<\/k>", "");
+
+            string i_err = ImportLevel(new_base_data, true);
+
+            if (i_err != null) errors.Add(i_err);
+
             return errors.Count > 0 ? $"List of errors:\n{String.Join("\n", errors)}" : "";
         }
 

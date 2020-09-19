@@ -162,6 +162,8 @@ namespace gdtools {
 
                     MessageBox.Show("Succesfully merged! :)");
 
+                    Program.MainForm.FullReload();
+
                     return "";
                 } catch (Exception e) { MessageBox.Show(e.ToString(), "Error"); return e.ToString(); }
             }
