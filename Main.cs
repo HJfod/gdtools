@@ -110,6 +110,7 @@ namespace gdtools {
                     new Pages.Share(),
                     new Pages.Backups(),
                     new Pages.Collabs(),
+                    new Pages.LevelEdit(),
                     new Pages.SettingPage()
                 };
                 

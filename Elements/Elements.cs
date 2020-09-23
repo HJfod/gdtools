@@ -150,6 +150,12 @@ namespace gdtools {
             }
         }
 
+        public class Input : TextBox {
+            public Input() {
+                Meth.HandleTheme(this);
+            }
+        }
+
         public class Link : LinkLabel {
             public Link(string _Text, string _Link) {
                 this.AutoSize = true;

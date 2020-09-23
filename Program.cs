@@ -8,7 +8,7 @@ using System.Drawing;
 
 namespace gdtools {
     public static class Settings {
-        public static Size DefaultSize = new Size(400, 450);
+        public static Size DefaultSize = new Size(450, 550);
         public static string AppName = "GDTools";
         public static string AppVersion = "v0.1.1";
         public static string AppBuild = "DEV-BUILD";

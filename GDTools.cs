@@ -144,7 +144,7 @@ namespace gdtools {
             return $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\..\\Local\\GeometryDash\\CC{which}.dat";
         }
 
-        private static string GetKey(string savedata, string key, string type = ".*?") {
+        public static string GetKey(string savedata, string key, string type = ".*?") {
             if (type == null) {
                 Match match = Regex.Match(savedata, $"<k>{key}</k>.*?>", RegexOptions.None, Regex.InfiniteMatchTimeout);
                 if (match.Value != "") {
@@ -163,7 +163,7 @@ namespace gdtools {
             return m.Value == "" ? "" : m.Value.Substring($"<k>{key}</k><A>".Length, m.Value.Length - $"<k>{key}</k><A>".Length - $"</A>".Length);
         }
 
-        private static string SetKey(string _data, string _key, string _val) {
+        public static string SetKey(string _data, string _key, string _val) {
             if (Regex.Match(_data, $"<k>{_key}</k><.*?>", RegexOptions.None, Regex.InfiniteMatchTimeout).Value == "") return _data;
 
             string actualTypeMatch = Regex.Match(_data, $"<k>{_key}</k><.*?>", RegexOptions.None, Regex.InfiniteMatchTimeout).Value;
@@ -444,6 +444,15 @@ namespace gdtools {
                 m_off.Value.IndexOf(",") + 1,
                 m_off.Value.LastIndexOf(",") - m_off.Value.IndexOf(",") - 1
             );
+        }
+
+        public static string SetStartKey(string _data, string _key, string _val) {
+            Match m_off = Regex.Match(_data, $"{_key},.*?,", RegexOptions.None, Regex.InfiniteMatchTimeout);
+            
+            if (m_off.Value == null)
+                return _data.Substring(0,_data.Length - 1) + $",{_key},{_val};";
+
+            return Regex.Replace(_data, $"{_key},.*?,", $"{_key},{_val},");
         }
 
         public static string GetObjectKey(string _obj, string _key) {
