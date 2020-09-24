@@ -54,10 +54,14 @@ namespace gdtools {
                     );
                 }));
 
-                Elem.Input BPMInput = new Elem.Input();
-                this.EditPanel.Controls.Add(new Elem.Div(new Control[] {
-                    BPMInput,
-                    new Elem.But("Create guidelines from BPM", (s, e) => {
+                this.EditPanel.Controls.Add(new Elem.But("Create guidelines from BPM", (s, e) => {
+                    Elem.ChooseForm c = new Elem.ChooseForm("Enter BPM", new string[] { "IS-INPUT::INT", "::Set", "Cancel" });
+
+                    c.Show();
+
+                    c.FinishStr += res => {
+                        Console.WriteLine(res);
+/*
                         string dat = GDTools.DecodeLevelData(
                             GDTools.GetKey(
                                 GDTools.GetLevelData(this.SelectedLevel), "k4")
@@ -70,8 +74,8 @@ namespace gdtools {
 
                         Console.WriteLine(ndat);
 
-                        GDTools.ImportLevel(ndat, true);
-                    })
+                        GDTools.ImportLevel(ndat, true); //*/
+                    };
                 }));
 
                 this.Controls.Add(SelectPanel);

@@ -80,13 +80,16 @@ namespace gdtools {
 
         public class ChooseForm : Form {
             public event Action<int> Finish;
+            public event Action<string> FinishStr;
 
             private void ChooseFinishEventHandler(int Fin) {}
+            private void ChooseFinishStrEventHandler(string Fin) {}
 
             public ChooseForm(string _Name, string[] _Buttons, string _Text = null) {
                 Meth.HandleTheme(this);
 
                 Finish += new Action<int>(ChooseFinishEventHandler);
+                FinishStr += new Action<string>(ChooseFinishStrEventHandler);
 
                 this.Text = _Name;
                 this.Size = new Size(Meth._S(250), Meth._S(200));
@@ -100,15 +103,34 @@ namespace gdtools {
                     p.Controls.Add(new Elem.Text(_Text));
 
                 int i = 0;
+                int rtype = 0;
+                Input inp = new Input();
                 foreach (string Button in _Buttons) {
-                    But n = new But(Button);
-                    int ix = i;
-                    n.Click += (s, e) => {
-                        Finish(ix);
-                        this.Close();
-                        this.Dispose();
-                    };
-                    p.Controls.Add(n);
+                    if (Button.StartsWith("IS-INPUT")) {
+                        switch (Button.Contains("::") ? Button.Substring(Button.IndexOf("::") + 2) : "") {
+                            case "INT":
+                                inp.SetType("INT");
+                                break;
+                        }
+                        rtype = 1;
+                        p.Controls.Add(inp);
+                        p.Controls.Add(new Elem.NewLine());
+                    } else {
+                        bool ret = false;
+                        string bt;
+                        if (Button.StartsWith("::")) {
+                            ret = true;
+                            bt = Button.Substring(2);
+                        } else bt = Button;
+                        But n = new But(bt);
+                        int ix = i;
+                        n.Click += (s, e) => {
+                            if (rtype == 1) { if (ret) FinishStr(inp.Text); else FinishStr(""); } else Finish(ix);
+                            this.Close();
+                            this.Dispose();
+                        };
+                        p.Controls.Add(n);
+                    }
                     i++;
                 }
 
@@ -151,8 +173,17 @@ namespace gdtools {
         }
 
         public class Input : TextBox {
+            private bool onlyNum = false;
+
             public Input() {
                 Meth.HandleTheme(this);
+
+                this.KeyPress += (o, e) => 
+                    e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
+            }
+
+            public void SetType(string _t) {
+                onlyNum = _t == "_INT";
             }
         }
 
