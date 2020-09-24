@@ -329,7 +329,7 @@ namespace gdtools {
             return lvl;
         }
 
-        public static string ImportLevel(string path, bool _inputdata = false) {
+        public static string ImportLevel(string path, bool _inputdata = false, string _savedata = "") {
             if (File.Exists(path) || _inputdata == true) {
                 try {
                     string lvl;
@@ -339,7 +339,7 @@ namespace gdtools {
                     else
                         lvl = path.EndsWith(Ext.LevelCompressed) ? "" : File.ReadAllText(path);
 
-                    string data = _LLSaveData;
+                    string data = _savedata == "" ? _LLSaveData : _savedata;
 
                     if (path.EndsWith(Ext.LevelAlt)) lvl = ConvertLvlToGmd(lvl);
 
@@ -360,6 +360,15 @@ namespace gdtools {
             } else {
                 return "File doesn't exist!";
             }
+        }
+
+        public static bool UpdateLevel(string _data, string _savedata = "") {
+            if (_savedata == "") _savedata = _LLSaveData;
+            string v = (Regex.Match(_savedata, $"{(Regex.Match(_data, @"<k>k_\d<\/k>")).Value}.*?<k>k_")).Value;
+            _savedata = Regex.Replace(_savedata, v.Substring(0, v.Length - 5), _data);
+            File.WriteAllText($"{_CCDirPath}\\CCLocalLevels.dat", _savedata);
+
+            return true;
         }
 
         public static bool SaveKeyToUserData(string key, string value, string type = "") {

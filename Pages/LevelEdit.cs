@@ -55,27 +55,64 @@ namespace gdtools {
                 }));
 
                 this.EditPanel.Controls.Add(new Elem.But("Create guidelines from BPM", (s, e) => {
-                    Elem.ChooseForm c = new Elem.ChooseForm("Enter BPM", new string[] { "IS-INPUT::INT", "::Set", "Cancel" });
+                    Form c = new Form();
+                    c.Text = "Enter BPM";
+                    Meth.HandleTheme(c);
+                    
+                    TableLayoutPanel con = new TableLayoutPanel();
+                    con.AutoSize = true;
+
+                    con.Controls.Add(new Elem.Input("__i_BPM", "INT", "BPM"));
+                    con.Controls.Add(new Elem.Input("__i_OFFSET", "INT", "Offset (ms)"));
+                    con.Controls.Add(new Elem.Input("__i_TIMESIG", "INT", "Time signature (x/4)"));
+                    con.Controls.Add(new Elem.Input("__i_LENGTH", "INT", "Length (s)"));
+                    
+                    CheckBox KeepOldGuidelines = new CheckBox();
+                    KeepOldGuidelines.Text = "Keep old guidelines";
+                    KeepOldGuidelines.AutoSize = true;
+                    KeepOldGuidelines.Checked = true;
+
+                    con.Controls.Add(KeepOldGuidelines);
+
+                    con.Controls.Add(new Elem.Div(new Control[] {
+                        new Elem.But("Create", (s, e) => {
+                            string iBPM = con.Controls.Find("__i_BPM", false)[0].Text;
+                            string iOFF = con.Controls.Find("__i_OFFSET", false)[0].Text;
+                            string iSIG = con.Controls.Find("__i_TIMESIG", false)[0].Text;
+                            string iLGT = con.Controls.Find("__i_LENGTH", false)[0].Text;
+
+                            if (iBPM.Length == 0 || iOFF.Length == 0 || iSIG.Length == 0 || iLGT.Length == 0) return;
+
+                            float BPMmultiplier = 60F / Int32.Parse(iBPM);
+
+                            int LineCount = Int32.Parse(iLGT) * Int16.Parse(iSIG);
+                            int TimeSignature = Int16.Parse(iSIG);
+                            float offset = Int32.Parse(iOFF) / 1000F;
+                            string bpmData = "";
+
+                            for (int i = 0; i < LineCount; i++)
+                                bpmData += $"{Math.Round((float)i * BPMmultiplier + offset, 2)}~{(i % TimeSignature == 0 ? "1" : "0")}~";
+
+                            string ndat = GDTools.GetLevelData(this.SelectedLevel);
+                            string dat = GDTools.DecodeLevelData(GDTools.GetKey(ndat, "k4"));
+
+                            if (KeepOldGuidelines.Checked)
+                                bpmData += $"{GDTools.GetStartKey(dat, "kA14")}~";
+
+                            ndat = GDTools.SetKey(ndat, "k4", GDTools.SetStartKey(dat, "kA14", bpmData.Substring(0, bpmData.Length - 1)));
+
+                            GDTools.UpdateLevel(ndat);
+
+                            c.Dispose();
+
+                            Program.MainForm.FullReload();
+                        }),
+                        new Elem.But("Cancel", (s, e) => c.Dispose())
+                    }));
+
+                    c.Controls.Add(con);
 
                     c.Show();
-
-                    c.FinishStr += res => {
-                        Console.WriteLine(res);
-/*
-                        string dat = GDTools.DecodeLevelData(
-                            GDTools.GetKey(
-                                GDTools.GetLevelData(this.SelectedLevel), "k4")
-                        );
-                        string ndat = GDTools.GetLevelData(this.SelectedLevel);
-
-                        ndat = GDTools.SetKey(GDTools.SetKey(ndat, "k4", GDTools.SetStartKey(dat, "kA14", "0.00~0~1.00~0~2.00~0~3.00~1")), "k2", "@@TEST@@");
-
-                        ndat = Regex.Replace(ndat, @"<k>k_\d+<\/k>", "");
-
-                        Console.WriteLine(ndat);
-
-                        GDTools.ImportLevel(ndat, true); //*/
-                    };
                 }));
 
                 this.Controls.Add(SelectPanel);
