@@ -119,9 +119,9 @@ namespace gdtools {
                 }));
 
                 this.EditPanel.Controls.Add(new Elem.But("Edit level properties", (s, e) => {
-                    Form c = new Form();
+                    Elem.BasicForm c = new Elem.BasicForm();
                     c.Text = "Edit level properties";
-                    Meth.HandleTheme(c);
+                    c.Size = new Size(Meth._S(350),Meth._S(350));
                     
                     TableLayoutPanel con = new TableLayoutPanel();
                     con.AutoSize = true;
@@ -130,19 +130,19 @@ namespace gdtools {
                     con.RowCount = 6;
 
                     con.Controls.Add(new Elem.Text("Name: "), 0, 0);
-                    con.Controls.Add(new Elem.Input("__L_NAME", "ANY", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k2")), 1, 0);
+                    con.Controls.Add(new Elem.Input("__L_NAME", "ANY", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k2"), true), 1, 0);
 
                     con.Controls.Add(new Elem.Text("Creator: "), 0, 1);
-                    con.Controls.Add(new Elem.Input("__L_CREATOR", "ANY", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k5")), 1, 1);
+                    con.Controls.Add(new Elem.Input("__L_CREATOR", "ANY", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k5"), true), 1, 1);
 
                     con.Controls.Add(new Elem.Text("Password: "), 0, 2);
-                    con.Controls.Add(new Elem.Input("__L_PASSWORD", "INT", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k41")), 1, 2);
+                    con.Controls.Add(new Elem.Input("__L_PASSWORD", "INT", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k41"), true), 1, 2);
 
                     string desc = GDTools.GetKey(this.SelectedLevelContent.Data, "k3");
                     try { desc = Encoding.UTF8.GetString(GDTools.DecryptBase64(desc)); } catch (Exception) {};
 
                     con.Controls.Add(new Elem.Text("Description: "), 0, 3);
-                    con.Controls.Add(new Elem.Input("__L_DESC", "ANY", "", desc), 1, 3);
+                    con.Controls.Add(new Elem.Input("__L_DESC", "ANY", "", desc, true), 1, 3);
 
                     con.Controls.Add(new Elem.Text(""), 0, 4);
 

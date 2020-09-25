@@ -78,6 +78,13 @@ namespace gdtools {
             }
         }
 
+        public class BasicForm : Form {
+            public BasicForm() {
+                Meth.HandleTheme(this);
+                this.CenterToScreen();
+            }
+        }
+
         public class ChooseForm : Form {
             public event Action<int> Finish;
             public event Action<string> FinishStr;
@@ -175,11 +182,14 @@ namespace gdtools {
         public class Input : TextBox {
             private bool onlyNum = false;
 
-            public Input(string _name = "__input", string _type = "ANY", string _desc = "", string _def = "") {
+            public Input(string _name = "__input", string _type = "ANY", string _desc = "", string _def = "", bool _big = false) {
                 Meth.HandleTheme(this);
 
                 this.Name = _name;
                 this.SetType(_type);
+                this.AutoSize = false;
+                this.TextWrapping = TextWrapping.Wrap;
+                if (_big) this.Size = new Size(Meth._S(150),Meth._S(40));
 
                 this.Text = _def == "" ? _desc : _def;
 
