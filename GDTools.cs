@@ -44,7 +44,7 @@ namespace gdtools {
             return Encoding.UTF8.GetString(xor);
         }
 
-        private static Byte[] DecryptBase64(string istr) {
+        public static Byte[] DecryptBase64(string istr) {
             return Convert.FromBase64String(istr);
         }
 
@@ -432,11 +432,13 @@ namespace gdtools {
         }
 
         public static string DecodeLevelData(string _data) {
-            return DecompressGZip(
-                DecryptBase64(
-                    _data.Replace("-", "+").Replace("_", "/").Replace("\0", string.Empty)
-                )
-            );
+            try {
+                return DecompressGZip(
+                    DecryptBase64(
+                        _data.Replace("-", "+").Replace("_", "/").Replace("\0", string.Empty)
+                    )
+                );
+            } catch (Exception) { return _data; }
         }
 
         public static string EncodeLevelData(string _data) {

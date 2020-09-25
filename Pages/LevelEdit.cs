@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace gdtools {
     namespace Pages {
@@ -12,6 +13,7 @@ namespace gdtools {
             private Elem.Text LevelName;
             private Elem.Select SelectLevel;
             public string SelectedLevel;
+            private dynamic SelectedLevelContent;
 
             public LevelEdit() {
                 this.Name = "Level";
@@ -36,9 +38,10 @@ namespace gdtools {
                 this.EditPanel.Visible = false;
                 this.EditPanel.AutoSize = true;
 
-                this.EditPanel.Controls.Add(new Elem.But("Back", (s, e) => {
-                    SelectPanel.Visible = true;
-                    EditPanel.Visible = false;
+                this.EditPanel.Controls.Add(new Elem.But("⟵", (s, e) => {
+                    this.SelectedLevelContent = new {};
+                    this.SelectPanel.Visible = true;
+                    this.EditPanel.Visible = false;
                 }));
 
                 this.EditPanel.Controls.Add(new Elem.NewLine());
@@ -93,8 +96,8 @@ namespace gdtools {
                             for (int i = 0; i < LineCount; i++)
                                 bpmData += $"{Math.Round((float)i * BPMmultiplier + offset, 2)}~{(i % TimeSignature == 0 ? "1" : "0")}~";
 
-                            string ndat = GDTools.GetLevelData(this.SelectedLevel);
-                            string dat = GDTools.DecodeLevelData(GDTools.GetKey(ndat, "k4"));
+                            string ndat = this.SelectedLevelContent.Data;
+                            string dat = this.SelectedLevelContent.k4;
 
                             if (KeepOldGuidelines.Checked)
                                 bpmData += $"{GDTools.GetStartKey(dat, "kA14")}~";
@@ -116,7 +119,49 @@ namespace gdtools {
                 }));
 
                 this.EditPanel.Controls.Add(new Elem.But("Edit level properties", (s, e) => {
-                    // edit name, creator, etc.
+                    Form c = new Form();
+                    c.Text = "Edit level properties";
+                    Meth.HandleTheme(c);
+                    
+                    TableLayoutPanel con = new TableLayoutPanel();
+                    con.AutoSize = true;
+
+                    con.ColumnCount = 3;
+                    con.RowCount = 6;
+
+                    con.Controls.Add(new Elem.Text("Name: "), 0, 0);
+                    con.Controls.Add(new Elem.Input("__L_NAME", "ANY", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k2")), 1, 0);
+
+                    con.Controls.Add(new Elem.Text("Creator: "), 0, 1);
+                    con.Controls.Add(new Elem.Input("__L_CREATOR", "ANY", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k5")), 1, 1);
+
+                    con.Controls.Add(new Elem.Text("Password: "), 0, 2);
+                    con.Controls.Add(new Elem.Input("__L_PASSWORD", "INT", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k41")), 1, 2);
+
+                    string desc = GDTools.GetKey(this.SelectedLevelContent.Data, "k3");
+                    try { desc = Encoding.UTF8.GetString(GDTools.DecryptBase64(desc)); } catch (Exception) {};
+
+                    con.Controls.Add(new Elem.Text("Description: "), 0, 3);
+                    con.Controls.Add(new Elem.Input("__L_DESC", "ANY", "", desc), 1, 3);
+
+                    con.Controls.Add(new Elem.Text(""), 0, 4);
+
+                    con.Controls.Add(new Elem.But("Apply changes"), 0, 5);
+
+                    c.Controls.Add(con);
+
+                    c.Show();
+                }));
+
+                this.EditPanel.Controls.Add(new Elem.But("View level info", (s, e) => {
+                    dynamic LevelInfo = GDTools.GetLevelInfo(this.SelectedLevel);
+                        
+                    string Info = "";
+
+                    foreach (PropertyInfo i in LevelInfo.GetType().GetProperties()) 
+                        Info += $"{i.Name.Replace("_", " ")}: {i.GetValue(LevelInfo)}\n";
+
+                    MessageBox.Show(Info, $"Info for {this.SelectedLevel}", MessageBoxButtons.OK, MessageBoxIcon.None);
                 }));
 
                 this.Controls.Add(SelectPanel);
@@ -124,13 +169,19 @@ namespace gdtools {
             }
 
             private bool SelectLevelToEdit() {
-                if (SelectLevel.SelectedItem == null) return false;
+                if (this.SelectLevel.SelectedItem == null) return false;
                 this.SelectedLevel = ((Elem.Select.SelectItem)this.SelectLevel.SelectedItem).Text;
+
+                string dat = GDTools.GetLevelData(this.SelectedLevel);
+                this.SelectedLevelContent = new {
+                    Data = dat,
+                    k4 = GDTools.DecodeLevelData(GDTools.GetKey(dat, "k4"))
+                };
                 
                 this.LevelName.Text = $"Editing {this.SelectedLevel}";
 
-                SelectPanel.Visible = false;
-                EditPanel.Visible = true;
+                this.SelectPanel.Visible = false;
+                this.EditPanel.Visible = true;
 
                 return true;
             }

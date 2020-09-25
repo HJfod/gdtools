@@ -175,17 +175,19 @@ namespace gdtools {
         public class Input : TextBox {
             private bool onlyNum = false;
 
-            public Input(string _name = "__input", string _type = "ANY", string _desc = "") {
+            public Input(string _name = "__input", string _type = "ANY", string _desc = "", string _def = "") {
                 Meth.HandleTheme(this);
 
                 this.Name = _name;
                 this.SetType(_type);
 
-                this.Text = _desc;
+                this.Text = _def == "" ? _desc : _def;
 
-                this.MouseEnter += (s, e) => { if (this.Text == _desc) this.Text = ""; };
-                this.MouseLeave += (s, e) => { if (this.Text == "" && !this.Focused) this.Text = _desc; };
-                this.GotFocus += (s, e) => { if (this.Text == _desc) this.Text = ""; };
+                if (_desc != "") {
+                    this.MouseEnter += (s, e) => { if (this.Text == _desc) this.Text = ""; };
+                    this.MouseLeave += (s, e) => { if (this.Text == "" && !this.Focused) this.Text = _desc; };
+                    this.GotFocus += (s, e) => { if (this.Text == _desc) this.Text = ""; };
+                }
 
                 this.KeyPress += (o, e) => 
                     e.Handled = this.onlyNum ? !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar) : false;
