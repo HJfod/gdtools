@@ -164,7 +164,11 @@ namespace gdtools {
         }
 
         public static string SetKey(string _data, string _key, string _val) {
-            if (Regex.Match(_data, $"<k>{_key}</k><.*?>", RegexOptions.None, Regex.InfiniteMatchTimeout).Value == "") return _data;
+            if (Regex.Match(_data, $"<k>{_key}</k><.*?>", RegexOptions.None, Regex.InfiniteMatchTimeout).Value == "") {
+                string kCEK = Regex.Match(_data, @"<k>kCEK<\/k><i>.*?<\/i>", RegexOptions.None, Regex.InfiniteMatchTimeout).Value;
+                string type = Int32.TryParse(_key, out int res) ? "i" : "s";
+                return Regex.Replace(_data, kCEK, $"{kCEK}<k>{_key}</k><{type}>{_val}</{type}>");
+            }
 
             string actualTypeMatch = Regex.Match(_data, $"<k>{_key}</k><.*?>", RegexOptions.None, Regex.InfiniteMatchTimeout).Value;
             string actualType = actualTypeMatch.Substring(actualTypeMatch.LastIndexOf("<") + 1, 1);
@@ -365,6 +369,7 @@ namespace gdtools {
         public static bool UpdateLevel(string _data, string _savedata = "") {
             if (_savedata == "") _savedata = _LLSaveData;
             string v = (Regex.Match(_savedata, $"{(Regex.Match(_data, @"<k>k_\d<\/k>")).Value}.*?<k>k_")).Value;
+            Console.WriteLine(v);
             _savedata = Regex.Replace(_savedata, v.Substring(0, v.Length - 5), _data);
             File.WriteAllText($"{_CCDirPath}\\CCLocalLevels.dat", _savedata);
 

@@ -188,7 +188,9 @@ namespace gdtools {
                 this.Name = _name;
                 this.SetType(_type);
                 this.AutoSize = false;
-                this.TextWrapping = TextWrapping.Wrap;
+                this.WordWrap = true;
+                this.Multiline = true;
+                this.ScrollBars = ScrollBars.Vertical;
                 if (_big) this.Size = new Size(Meth._S(150),Meth._S(40));
 
                 this.Text = _def == "" ? _desc : _def;

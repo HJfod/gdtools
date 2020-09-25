@@ -48,14 +48,6 @@ namespace gdtools {
 
                 this.LevelName = new Elem.Text();
                 this.EditPanel.Controls.Add(LevelName);
-                
-                this.EditPanel.Controls.Add(new Elem.But("View level code", (s, e) => {
-                    MessageBox.Show(
-                        GDTools.GetKey(
-                            GDTools.GetLevelData(this.SelectedLevel),
-                        "k4")
-                    );
-                }));
 
                 this.EditPanel.Controls.Add(new Elem.But("Create guidelines from BPM", (s, e) => {
                     Form c = new Form();
@@ -122,6 +114,8 @@ namespace gdtools {
                     Elem.BasicForm c = new Elem.BasicForm();
                     c.Text = "Edit level properties";
                     c.Size = new Size(Meth._S(350),Meth._S(350));
+
+                    string newData = this.SelectedLevelContent.Data;
                     
                     TableLayoutPanel con = new TableLayoutPanel();
                     con.AutoSize = true;
@@ -130,15 +124,15 @@ namespace gdtools {
                     con.RowCount = 6;
 
                     con.Controls.Add(new Elem.Text("Name: "), 0, 0);
-                    con.Controls.Add(new Elem.Input("__L_NAME", "ANY", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k2"), true), 1, 0);
+                    con.Controls.Add(new Elem.Input("__L_NAME", "ANY", "", GDTools.GetKey(newData, "k2"), true), 1, 0);
 
                     con.Controls.Add(new Elem.Text("Creator: "), 0, 1);
-                    con.Controls.Add(new Elem.Input("__L_CREATOR", "ANY", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k5"), true), 1, 1);
+                    con.Controls.Add(new Elem.Input("__L_CREATOR", "ANY", "", GDTools.GetKey(newData, "k5"), true), 1, 1);
 
                     con.Controls.Add(new Elem.Text("Password: "), 0, 2);
-                    con.Controls.Add(new Elem.Input("__L_PASSWORD", "INT", "", GDTools.GetKey(this.SelectedLevelContent.Data, "k41"), true), 1, 2);
+                    con.Controls.Add(new Elem.Input("__L_PASSWORD", "INT", "", GDTools.GetKey(newData, "k41"), true), 1, 2);
 
-                    string desc = GDTools.GetKey(this.SelectedLevelContent.Data, "k3");
+                    string desc = GDTools.GetKey(newData, "k3");
                     try { desc = Encoding.UTF8.GetString(GDTools.DecryptBase64(desc)); } catch (Exception) {};
 
                     con.Controls.Add(new Elem.Text("Description: "), 0, 3);
@@ -146,7 +140,20 @@ namespace gdtools {
 
                     con.Controls.Add(new Elem.Text(""), 0, 4);
 
-                    con.Controls.Add(new Elem.But("Apply changes"), 0, 5);
+                    con.Controls.Add(new Elem.But("Apply changes", (s, e) => {
+                        newData = GDTools.SetKey(newData, "k2",     con.Controls.Find("__L_NAME", true)[0].Text);
+                        newData = GDTools.SetKey(newData, "k5",     con.Controls.Find("__L_CREATOR", true)[0].Text);
+                        newData = GDTools.SetKey(newData, "k41",    con.Controls.Find("__L_PASSWORD", true)[0].Text);
+                        newData = GDTools.SetKey(newData, "k3",     con.Controls.Find("__L_DESC", true)[0].Text);
+
+                        Console.WriteLine(newData.Replace(System.Environment.NewLine, "") + "\n\n");
+
+                        GDTools.UpdateLevel(newData.Replace(System.Environment.NewLine, ""));
+
+                        c.Dispose();
+
+                        Program.MainForm.FullReload();
+                    }), 0, 5);
 
                     c.Controls.Add(con);
 
