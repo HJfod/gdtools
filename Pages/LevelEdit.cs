@@ -115,6 +115,10 @@ namespace gdtools {
                     c.Show();
                 }));
 
+                this.EditPanel.Controls.Add(new Elem.But("Edit level properties", (s, e) => {
+                    // edit name, creator, etc.
+                }));
+
                 this.Controls.Add(SelectPanel);
                 this.Controls.Add(EditPanel);
             }

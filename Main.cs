@@ -73,13 +73,10 @@ namespace gdtools {
             }));
 
             Task.Run<bool>(() => {
-                while (GDTools.CheckIfGDIsOpen()) {
+                while (GDTools.CheckIfGDIsOpen())
                     Thread.Sleep(GDTools._GDCheckLoopTime);
-                }
                 
-                this.BeginInvoke((Action)(() => {
-                    this.FullReload();
-                }));
+                this.BeginInvoke((Action)(() => this.FullReload() ));
 
                 return true;
             });
