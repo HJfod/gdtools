@@ -48,6 +48,11 @@ namespace gdtools {
 
                 this.LevelName = new Elem.Text();
                 this.EditPanel.Controls.Add(LevelName);
+                this.EditPanel.Controls.Add(new Elem.BigNewLine());
+
+                CheckBox ExportCompressed = new CheckBox();
+                ExportCompressed.Text = "Export compressed (.gmdc)";
+                ExportCompressed.AutoSize = true;
 
                 this.EditPanel.Controls.Add(new Elem.But("Create guidelines from BPM", (s, e) => {
                     Form c = new Form();
@@ -144,9 +149,7 @@ namespace gdtools {
                         newData = GDTools.SetKey(newData, "k2",     con.Controls.Find("__L_NAME", true)[0].Text);
                         newData = GDTools.SetKey(newData, "k5",     con.Controls.Find("__L_CREATOR", true)[0].Text);
                         newData = GDTools.SetKey(newData, "k41",    con.Controls.Find("__L_PASSWORD", true)[0].Text);
-                        newData = GDTools.SetKey(newData, "k3",     con.Controls.Find("__L_DESC", true)[0].Text);
-
-                        Console.WriteLine(newData.Replace(System.Environment.NewLine, "") + "\n\n");
+                        newData = GDTools.SetKey(newData, "k3",     GDTools.EncryptBase64(Encoding.UTF8.GetBytes(con.Controls.Find("__L_DESC", true)[0].Text)));
 
                         GDTools.UpdateLevel(newData.Replace(System.Environment.NewLine, ""));
 
@@ -170,6 +173,24 @@ namespace gdtools {
 
                     MessageBox.Show(Info, $"Info for {this.SelectedLevel}", MessageBoxButtons.OK, MessageBoxIcon.None);
                 }));
+
+                this.EditPanel.Controls.Add(new Elem.But("Export this level", (s, e) => {
+                    FolderBrowserDialog fbd = new FolderBrowserDialog();
+                    DialogResult dr = fbd.ShowDialog();
+
+                    if (dr == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath)) {
+                        string ExportTry = GDTools.ExportLevel(this.SelectedLevel, fbd.SelectedPath, ExportCompressed.Checked);
+                        if (ExportTry != null) {
+                            MessageBox.Show($"Error: {ExportTry}");
+                        } else {
+                            MessageBox.Show("Successfully exported!");
+                        }
+                    } else if (dr != DialogResult.Cancel) {
+                        MessageBox.Show("Selected path not accepted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }));
+
+                this.EditPanel.Controls.Add(ExportCompressed);
 
                 this.Controls.Add(SelectPanel);
                 this.Controls.Add(EditPanel);

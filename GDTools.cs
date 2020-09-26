@@ -48,7 +48,7 @@ namespace gdtools {
             return Convert.FromBase64String(istr);
         }
 
-        private static string EncryptBase64(Byte[] istr) {
+        public static string EncryptBase64(Byte[] istr) {
             return Convert.ToBase64String(istr);
         }
 
@@ -369,7 +369,6 @@ namespace gdtools {
         public static bool UpdateLevel(string _data, string _savedata = "") {
             if (_savedata == "") _savedata = _LLSaveData;
             string v = (Regex.Match(_savedata, $"{(Regex.Match(_data, @"<k>k_\d<\/k>")).Value}.*?<k>k_")).Value;
-            Console.WriteLine(v);
             _savedata = Regex.Replace(_savedata, v.Substring(0, v.Length - 5), _data);
             File.WriteAllText($"{_CCDirPath}\\CCLocalLevels.dat", _savedata);
 
