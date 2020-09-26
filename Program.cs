@@ -18,6 +18,7 @@ namespace gdtools {
         public static float AppScale = 1;
         public static bool DarkTheme = false;
         public static bool CompressBackups = true;
+        public static bool DevMode = false;
     }
 
     public static class Program {

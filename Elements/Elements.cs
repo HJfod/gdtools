@@ -255,5 +255,27 @@ namespace gdtools {
                 }
             }
         }
+
+        public class DevToolWarning : TableLayoutPanel {
+            public DevToolWarning(EventHandler _onc) {
+                this.AutoSize = true;
+                this.Dock = DockStyle.Fill;
+                this.Controls.Add(new Elem.Text("WARNING!"));
+                this.Controls.Add(new Elem.NewLine());
+                this.Controls.Add(new Elem.Text("This tab contains tools that are not yet fully complete and therefore extremely buggy."));
+                this.Controls.Add(new Elem.NewLine());
+                this.Controls.Add(new Elem.Text("To use them, you need to enable Developer Mode."));
+                this.Controls.Add(new Elem.NewLine());
+
+                Elem.But EnB = new Elem.But("Enable Dev Mode");
+                EnB.Click += _onc;
+                EnB.Click += (s, e) => {
+                    Settings.DevMode = true;
+                    GDTools.SaveKeyToUserData("dev-mode", "1");
+                    this.Dispose();
+                };
+                this.Controls.Add(EnB);
+            }
+        }
     }
 }

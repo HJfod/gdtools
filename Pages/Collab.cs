@@ -15,6 +15,10 @@ namespace gdtools {
                 this.Dock = DockStyle.Fill;
                 Meth.HandleTheme(this);
 
+                TableLayoutPanel con = new TableLayoutPanel();
+                con.AutoSize = true;
+                con.Visible = Settings.DevMode;
+
                 MergeList = new Elem.Select(false);
                 MergeBase = new Elem.Text("Base not selected");
 
@@ -142,11 +146,14 @@ namespace gdtools {
                 MergeLinkToggle.Click += (s, e) =>
                     MergeLink = MergeLinkToggle.Checked;
 
-                this.Controls.Add(new Elem.Text("Part merging"));
-                this.Controls.Add(MergeList);
-                this.Controls.Add(MergeBase);
-                this.Controls.Add(MergeControls);
-                this.Controls.Add(MergeLinkToggle);
+                con.Controls.Add(new Elem.Text("Part merging"));
+                con.Controls.Add(MergeList);
+                con.Controls.Add(MergeBase);
+                con.Controls.Add(MergeControls);
+                con.Controls.Add(MergeLinkToggle);
+
+                this.Controls.Add(con);
+                if (!Settings.DevMode) this.Controls.Add(new Elem.DevToolWarning((s, e) => { con.Visible = true; }));
             }
 
             public string MergeParts() {

@@ -42,8 +42,18 @@ namespace gdtools {
                     GDTools.SaveKeyToUserData("compress-backups", ToggleBackupCompression.Checked ? "1" : "0");
                 };
 
+                CheckBox ToggleDevMode = new CheckBox();
+                if (Settings.DevMode) ToggleDevMode.Checked = true;
+                ToggleDevMode.Text = "Enable Developer Mode (Experimental features)";
+                ToggleDevMode.AutoSize = true;
+                ToggleDevMode.Click += (s, e) => {
+                    Settings.DevMode = ToggleDevMode.Checked;
+                    GDTools.SaveKeyToUserData("dev-mode", ToggleDevMode.Checked ? "1" : "0");
+                };
+
                 this.Controls.Add(ToggleDarkMode);
                 this.Controls.Add(ToggleBackupCompression);
+                this.Controls.Add(ToggleDevMode);
 
                 this.Controls.Add(new Elem.BigNewLine());
 

@@ -26,7 +26,7 @@ namespace gdtools {
             public static string LevelZipped = "gmdz";
             public static string Backup = "gdb";
             public static string LevelList = $".{Level}, .{LevelCompressed}";
-            public static string UserData = "user";
+            public static string UserData = "gdt";
             public static string Filter = $"Level files (*.{LevelAlt};*.{Level};*.{LevelCompressed})|*.{LevelAlt};*.{Level};*.{LevelCompressed}|All files (*.*)|*.*";
             public static string BackupFilter = $"Level files (*.zip;*.{Backup})|*.zip;*.{Backup}|All files (*.*)|*.*";
             public static dynamic ExtArray = new {
@@ -413,6 +413,9 @@ namespace gdtools {
                             break;
                         case "compress-backups":
                             Settings.CompressBackups = Int32.Parse(val) == 1 ? true : false;
+                            break;
+                        case "dev-mode":
+                            Settings.DevMode = Int32.Parse(val) == 1 ? true : false;
                             break;
                     }
                 }
