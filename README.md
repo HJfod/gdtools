@@ -4,6 +4,14 @@ All of my GD tools, in one program. GDShare & More.
 
 # Download & Usage
 
+## Release version
+
+1. Download [the latest release](https://github.com/HJfod/gdtools/releases/latest)
+2. Unzip it in a folder of your choice
+3. Run `gdtools.exe`
+
+## Development Version
+
 ### For beginners:
 
 1. Download and install [.NET Core Runtime](https://dotnet.microsoft.com/download) (Make sure to enable command-line tools if asked)
@@ -21,7 +29,7 @@ All of my GD tools, in one program. GDShare & More.
 3. Navigate to folder in the command line
 4. `dotnet run`
 
-### For the maddest of chads:
+### For the maddest of lads:
 
 1. `dotnet run`
 
@@ -31,14 +39,19 @@ All of my GD tools, in one program. GDShare & More.
 
  * Export & Import levels
    * Unlike [GDShare](https://github.com/HJfod/gdshare), also supports compressing level files
- * View backups
+ * Create & manage backups
+ * Level editing tools
+   * Create guidelines from BPM
+
+### WIP:
+
+ * Collab part auto-merging tool
 
 ### Future:
 
- * Make & manage backups
  * Automatic backups
  * Level analysis
 
-### If I get the motivation:
+# Contribution
 
- * Collab part auto-merging tool
+If you'd like to work on this, send me a DM on [Discord](https://discord.gg). HJfod#1795
