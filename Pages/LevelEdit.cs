@@ -30,7 +30,7 @@ namespace gdtools {
                     this.SelectLevel.AddItem(lvl.Name);
                 
                 this.SelectPanel.Controls.Add(SelectLevel);
-                this.SelectPanel.Controls.Add(new Elem.But("Select", (s, e) => this.SelectLevelToEdit()));
+                this.SelectPanel.Controls.Add(new Elem.But("Select", (s, e) => this.SelectLevelToEdit(), "Select a level to edit"));
 
 
 
@@ -113,7 +113,7 @@ namespace gdtools {
                     c.Controls.Add(con);
 
                     c.Show();
-                }));
+                }, "Used to generate automatic guidelines in the level out of the song's BPM to ease syncing."));
 
                 this.EditPanel.Controls.Add(new Elem.But("Edit level properties", (s, e) => {
                     Elem.BasicForm c = new Elem.BasicForm();
@@ -161,7 +161,7 @@ namespace gdtools {
                     c.Controls.Add(con);
 
                     c.Show();
-                }));
+                }, "Edit level properties such as name, description, etc. (Hint: You can add newlines to descriptions!)"));
 
                 this.EditPanel.Controls.Add(new Elem.But("View level info", (s, e) => {
                     dynamic LevelInfo = GDTools.GetLevelInfo(this.SelectedLevel);
@@ -172,7 +172,7 @@ namespace gdtools {
                         Info += $"{i.Name.Replace("_", " ")}: {i.GetValue(LevelInfo)}\n";
 
                     MessageBox.Show(Info, $"Info for {this.SelectedLevel}", MessageBoxButtons.OK, MessageBoxIcon.None);
-                }));
+                }, "View info about the selected level."));
 
                 this.EditPanel.Controls.Add(new Elem.But("Export this level", (s, e) => {
                     FolderBrowserDialog fbd = new FolderBrowserDialog();
@@ -188,7 +188,7 @@ namespace gdtools {
                     } else if (dr != DialogResult.Cancel) {
                         MessageBox.Show("Selected path not accepted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
-                }));
+                }, "Export the selected level"));
 
                 this.EditPanel.Controls.Add(ExportCompressed);
 
