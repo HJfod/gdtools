@@ -1,0 +1,8 @@
+src C:/Users/HJ/AppData/Local/GeometryDash
+dest D:/gdbackups
+enabled 0
+rate 1
+limit 3
+lastbackup 18531
+create-on-gd-close 1
+compress 1

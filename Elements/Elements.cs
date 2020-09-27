@@ -157,6 +157,7 @@ namespace gdtools {
         public class Text : Label {
             public Text(string _Text = "") {
                 this.AutoSize = true;
+                this.MaximumSize = new Size(350, 0);
                 Meth.HandleTheme(this, true);
                 if (_Text != "") this.Text = _Text;
             }

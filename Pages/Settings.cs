@@ -123,7 +123,7 @@ namespace gdtools {
                 
                 this.Controls.Add(new Elem.BigNewLine());
                 
-                this.Controls.Add(new Elem.Text("In case you need specific help,\r\nmessage HJfod on Discord at HJfod#1795.\r\n"));
+                this.Controls.Add(new Elem.Text("In case you need specific help, message HJfod on Discord at HJfod#1795.\r\n"));
 
                 this.Controls.Add(new Elem.Link("Support server", "https://discord.gg/ZvV7zjj"));
                 this.Controls.Add(new Elem.Link("Github repository", "https://github.com/HJfod/gdtools"));
