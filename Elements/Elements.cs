@@ -155,9 +155,9 @@ namespace gdtools {
         }
 
         public class Text : Label {
-            public Text(string _Text = "") {
+            public Text(string _Text = "", Size? _size = null) {
                 this.AutoSize = true;
-                this.MaximumSize = new Size(350, 0);
+                this.MaximumSize = (_size is Size) ? (Size)_size : new Size(350, 0);
                 Meth.HandleTheme(this, true);
                 if (_Text != "") this.Text = _Text;
             }
@@ -182,6 +182,7 @@ namespace gdtools {
 
         public class Input : TextBox {
             private bool onlyNum = false;
+            private bool allowDot = false;
 
             public Input(string _name = "__input", string _type = "ANY", string _desc = "", string _def = "", bool _big = false) {
                 Meth.HandleTheme(this);
@@ -203,11 +204,14 @@ namespace gdtools {
                 }
 
                 this.KeyPress += (o, e) => 
-                    e.Handled = this.onlyNum ? !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar) : false;
+                    e.Handled = this.onlyNum ? this.allowDot ? 
+                        !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar) && !char.IsPunctuation(e.KeyChar)
+                        : !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar) : false;
             }
 
             public void SetType(string _t) {
-                onlyNum = _t == "INT";
+                onlyNum = _t == "INT" || _t == "FLT";
+                allowDot = _t == "FLT";
             }
         }
 

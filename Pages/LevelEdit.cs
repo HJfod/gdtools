@@ -174,6 +174,51 @@ namespace gdtools {
                     MessageBox.Show(Info, $"Info for {this.SelectedLevel}", MessageBoxButtons.OK, MessageBoxIcon.None);
                 }, "View info about the selected level."));
 
+                this.EditPanel.Controls.Add(new Elem.But("Generate T4 glow", (s, e) => {
+                    Elem.BasicForm c = new Elem.BasicForm();
+                    c.Text = "Generate T4 glow";
+                    c.Size = new Size(Meth._S(350),Meth._S(350));
+
+                    string newData = this.SelectedLevelContent.Data;
+                    
+                    TableLayoutPanel con = new TableLayoutPanel();
+                    con.AutoSize = true;
+
+                    con.ColumnCount = 3;
+                    con.RowCount = 7;
+
+                    con.Controls.Add(new Elem.Text("X position: "), 0, 0);
+                    con.Controls.Add(new Elem.Input("__L_X", "INT", "", "0"), 1, 0);
+
+                    con.Controls.Add(new Elem.Text("Y position: "), 0, 1);
+                    con.Controls.Add(new Elem.Input("__L_Y", "INT", "", "0"), 1, 1);
+
+                    con.Controls.Add(new Elem.Text("Scale: "), 0, 2);
+                    con.Controls.Add(new Elem.Input("__L_S", "FLT", "", "1"), 1, 2);
+
+                    con.Controls.Add(new Elem.Text(""), 0, 4);
+
+                    con.Controls.Add(new Elem.But("Generate", (s, e) => {
+                        string obj = GDTools.DecodeLevelData(GDTools.GetKey(newData, "k4"));
+
+                        obj += $"1,1888,2,{con.Controls.Find("__L_X", true)[0].Text},3,{con.Controls.Find("__L_Y", true)[0].Text},24,10,32,{con.Controls.Find("__L_S", true)[0].Text};";
+
+                        newData = GDTools.SetKey(newData, "k4", GDTools.EncodeLevelData(obj));
+
+                        GDTools.UpdateLevel(newData);
+
+                        c.Dispose();
+
+                        Program.MainForm.FullReload();
+                    }), 0, 5);
+
+                    con.Controls.Add(new Elem.Text("T4 glow is Blending glow that can be put above T3 solid objects.\r\n\r\nYou have to give the glow a color that has Blending enabled.", new Size(150, 0)), 0, 6);
+
+                    c.Controls.Add(con);
+
+                    c.Show();
+                }, "Generates a piece of T4 glow at the start of the level."));
+
                 this.EditPanel.Controls.Add(new Elem.But("Export this level", (s, e) => {
                     FolderBrowserDialog fbd = new FolderBrowserDialog();
                     DialogResult dr = fbd.ShowDialog();

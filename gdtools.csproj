@@ -12,6 +12,8 @@
   
   <ItemGroup>
     <None Remove="gdtools.ico" />
+    <None Remove="userdata.gdt" />
+    <nONE Remove="Autobackup" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="gdtools.ico" />
