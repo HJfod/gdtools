@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Net.Http;
 
 namespace gdtools {
     public class GDTools {
@@ -79,9 +80,8 @@ namespace gdtools {
 
         public static async Task<bool> CheckGDOpenLoop() {
             return await Task.Run<bool>(() => {
-                while (CheckIfGDIsOpen()) {
+                while (CheckIfGDIsOpen())
                     Thread.Sleep(_GDCheckLoopTime);
-                }
                 return true;
             });
         }
@@ -427,6 +427,8 @@ namespace gdtools {
             string res = null;
             if (_path.Contains('\\')) {
                 res = File.ReadAllText(_path);
+            } else if (Regex.IsMatch(_path, @"^\d* (.*?)")) {
+                res = RequestLevelData(_path.Split(" ")[0]);
             } else {
                 foreach (dynamic lvl in _LevelList) {
                     if (lvl.Name == _path) {
@@ -649,6 +651,51 @@ namespace gdtools {
             if (i_err != null) errors.Add(i_err);
 
             return errors.Count > 0 ? $"List of errors:\n{String.Join("\n", errors)}" : "";
+        }
+
+        public static string RequestGDLevel(string _ID) {
+            return Program.HClient.PostAsync("http://boomlings.com/database/getGJLevels21.php",
+            new FormUrlEncodedContent(new Dictionary<string, string> {
+                { "secret", "Wmfd2893gb7" },
+                { "type", "10" },
+                { "str", _ID }
+            })).Result.Content.ReadAsStringAsync().Result;
+        }
+
+        public static string RequestLevelData(string _ID) {
+            return Program.HClient.PostAsync("http://boomlings.com/database/downloadGJLevel22.php",
+            new FormUrlEncodedContent(new Dictionary<string, string> {
+                { "secret", "Wmfd2893gb7" },
+                { "levelID", _ID }
+            })).Result.Content.ReadAsStringAsync().Result;
+        }
+
+        public static string VerifyRequest(string _req) {
+            switch (_req) {
+                case "-1": return "Invalid request";
+                case "-2": return "Taken";
+                case "-4": return "Request too large";
+                case "-5": return "Bad login info";
+                case "-6": return "Server error";
+                case "":   return "";
+                default:   return "Unknown error";
+            }
+        }
+
+        public static string GetRequestKey(string _req, string _key) {
+            bool isKey = true;
+            string[] r = _req.Split(":");
+
+            for (int i = 0; i < r.Length; i++) {
+                if (isKey) {
+                    if (r[i] == _key)
+                        return r[i + 1];
+                    isKey = false;
+                } else
+                    isKey = true;
+            }
+
+            return "";
         }
 
         public class Backups {

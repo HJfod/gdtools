@@ -26,15 +26,15 @@ int main() {
         void toastFailed() const override;
     };
     
-    //WinToastHandlerExample* handler = new WinToastHandlerExample;
+    WinToastHandlerExample* handler = new WinToastHandlerExample;
     WinToastTemplate templ = WinToastTemplate(WinToastTemplate::ImageAndText02);
     templ.setImagePath(L"../Resources/gdtools.png");
     templ.setTextField(L"title", WinToastTemplate::FirstLine);
     templ.setTextField(L"subtitle", WinToastTemplate::SecondLine);
 
-    /*if (!WinToast::instance()->showToast(templ, handler)) {
+    if (!WinToast::instance()->showToast(templ, handler)) {
         std::wcout << L"Error: Could not launch your toast notification!" << std::endl;
-    }*/
+    }
 
     std::string line;
     std::ifstream myfile (".autobackup");

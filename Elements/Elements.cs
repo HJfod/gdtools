@@ -111,13 +111,14 @@ namespace gdtools {
 
                 int i = 0;
                 int rtype = 0;
-                Input inp = new Input();
+                Input inp = new Input("__inp", "ANY", "", "", false, false);
                 foreach (string Button in _Buttons) {
                     if (Button.StartsWith("IS-INPUT")) {
-                        switch (Button.Contains("::") ? Button.Substring(Button.IndexOf("::") + 2) : "") {
-                            case "INT":
-                                inp.SetType("INT");
-                                break;
+                        if (Button.Contains("-BIG")) {
+                            inp.MakeBig();
+                        }
+                        if (Button.Contains("::")) {
+                            inp.SetType(Button.Substring(Button.IndexOf("::") + 2));
                         }
                         rtype = 1;
                         p.Controls.Add(inp);
@@ -183,15 +184,16 @@ namespace gdtools {
         public class Input : TextBox {
             private bool onlyNum = false;
             private bool allowDot = false;
+            private bool allowSpace = false;
 
-            public Input(string _name = "__input", string _type = "ANY", string _desc = "", string _def = "", bool _big = false) {
+            public Input(string _name = "__input", string _type = "ANY", string _desc = "", string _def = "", bool _big = false, bool _multi = true) {
                 Meth.HandleTheme(this);
 
                 this.Name = _name;
                 this.SetType(_type);
                 this.AutoSize = false;
                 this.WordWrap = true;
-                this.Multiline = true;
+                this.Multiline = _multi;
                 this.ScrollBars = ScrollBars.Vertical;
                 if (_big) this.Size = new Size(Meth._S(150),Meth._S(40));
 
@@ -203,15 +205,25 @@ namespace gdtools {
                     this.GotFocus += (s, e) => { if (this.Text == _desc) this.Text = ""; };
                 }
 
-                this.KeyPress += (o, e) => 
-                    e.Handled = this.onlyNum ? this.allowDot ? 
-                        !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar) && !char.IsPunctuation(e.KeyChar)
-                        : !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar) : false;
+                this.KeyPress += (o, e) => {
+                    bool hand = false;
+
+                    if (this.onlyNum) hand = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
+                    if (this.allowDot) if (char.IsPunctuation(e.KeyChar)) hand = false;
+                    if (this.allowSpace) if (char.IsWhiteSpace(e.KeyChar)) hand = false;
+
+                    e.Handled = hand;
+                };
+            }
+
+            public void MakeBig() {
+                this.Size = new Size(Meth._S(150),Meth._S(40));
             }
 
             public void SetType(string _t) {
-                onlyNum = _t == "INT" || _t == "FLT";
+                onlyNum = _t == "INT" || _t == "FLT" || _t == "INS";
                 allowDot = _t == "FLT";
+                allowSpace = _t == "INS";
             }
         }
 

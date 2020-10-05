@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace gdtools {
     namespace Pages {
@@ -27,7 +28,7 @@ namespace gdtools {
 
                 MergeControls.Controls.Add(new Elem.But("Set base", (s, e) => {
                     Elem.ChooseForm Select = new Elem.ChooseForm("Select base source",
-                    new string[] { "Set base from file", "Set base from local levels" });
+                    new string[] { "Set base from file", "Set base from local levels", "Set base by ID" });
 
                     Select.Show();
 
@@ -50,7 +51,7 @@ namespace gdtools {
                                     }
                                 }
                             }
-                        } else {
+                        } else if (res == 1) {
                             Form Choose = new Form();
                             Choose.Text = "Double-click to select";
                             Choose.Size = new Size(400, 300);
@@ -73,12 +74,35 @@ namespace gdtools {
                             Choose.Controls.Add(ExportSelect);
 
                             Choose.Show();
+                        } else if (res == 2) {
+                            Elem.ChooseForm c = new Elem.ChooseForm( "Type Level ID", 
+                                new string[] { "IS-INPUT::INT", "::Search", "Cancel" },
+                                "Type in level ID"
+                            );
+
+                            c.Show();
+
+                            c.FinishStr += resc => {
+                                if (resc != "") {
+                                    Elem.MsgBox LoadInfo = new Elem.MsgBox("Loading...");
+                                    LoadInfo.Show();
+
+                                    string r = GDTools.RequestGDLevel(resc);
+
+                                    if (r.StartsWith("-"))
+                                        MessageBox.Show($"Error: {GDTools.VerifyRequest(r)}", "Could not get level!");
+                                    
+                                    AddBase($"{resc} ({GDTools.GetRequestKey(r, "2")})");
+
+                                    LoadInfo.Dispose();
+                                }
+                            };
                         }
                     };
                 }));
                 MergeControls.Controls.Add(new Elem.But("Add part(s)", (s, e) => {
                     Elem.ChooseForm Select = new Elem.ChooseForm("Select part source",
-                    new string[] { "Add part(s) from file", "Add part(s) from local levels" });
+                    new string[] { "Add part(s) from file", "Add part(s) from local levels", "Add part(s) by ID" });
 
                     Select.Show();
 
@@ -101,7 +125,7 @@ namespace gdtools {
                                     }
                                 }
                             }
-                        } else {
+                        } else if (res == 1) {
                             Form Choose = new Form();
                             Choose.Text = "Double-click to select";
                             Choose.Size = new Size(400, 300);
@@ -127,7 +151,43 @@ namespace gdtools {
                                 new Elem.But("Select", Pick)
                             }));
 
-                            Choose.Show();
+                            Choose.ShowDialog(Select);
+                        } else if (res == 2) {
+                            Elem.ChooseForm c = new Elem.ChooseForm( "Type Level ID(s)", 
+                                new string[] { "IS-INPUT-BIG::INS", "::Search", "Cancel" },
+                                "Type in level ID(s) (Separated by spaces)"
+                            );
+
+                            c.Show();
+
+                            c.FinishStr += resc => {
+                                if (resc != "") {
+                                    int i = 0;
+                                    string[] rescs = resc.Split(" ");
+                                    foreach (string ress in rescs) {
+                                        i++;
+                                        Elem.MsgBox LoadInfo = new Elem.MsgBox($"Loading ({i}/{rescs.Length})...");
+                                        LoadInfo.Show();
+
+                                        if (ress.Length < 3) {
+                                            LoadInfo.Dispose();
+                                            continue;
+                                        }
+
+                                        string r = GDTools.RequestGDLevel(ress);
+
+                                        if (r.StartsWith("-")) {
+                                            MessageBox.Show($"Error with {ress}: {GDTools.VerifyRequest(r)}", "Could not get level!");
+                                            LoadInfo.Dispose();
+                                            continue;
+                                        }
+                                        
+                                        AddMerge($"{ress} ({GDTools.GetRequestKey(r, "2")})");
+
+                                        LoadInfo.Dispose();
+                                    }
+                                }
+                            };
                         }
                     };
                 }));

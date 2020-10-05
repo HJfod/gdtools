@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Drawing;
+using System.Net.Http;
 
 namespace gdtools {
     public static class Settings {
@@ -26,6 +27,8 @@ namespace gdtools {
         static extern bool AttachConsole( int dwProcessId );
 
         public static Main MainForm = new gdtools.Main();
+        
+        public static readonly HttpClient HClient = new HttpClient();
 
         [STAThread]
         static void Main() {
