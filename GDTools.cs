@@ -35,7 +35,6 @@ namespace gdtools {
                 Backups = new string[] { ".zip", Backup }
             };
         }
-        public struct Nullable<T> where T : struct {}
 
         private static string DecryptXOR(string str, int key) {
             byte[] xor = Encoding.UTF8.GetBytes(str);
@@ -140,8 +139,18 @@ namespace gdtools {
         }
  
         public static string GetCCPath(string which) {
-            if (which == "") return $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\..\\Local\\GeometryDash";
-            return $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\..\\Local\\GeometryDash\\CC{which}.dat";
+            if (_CCDirPath == null) {
+                if (which == "") return $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\\GeometryDash";
+                return $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\\GeometryDash\\CC{which}.dat";
+            } else {
+                if (which == "") return _CCDirPath;
+                return $"{_CCDirPath}\\CC{which}.dat";
+            }
+        }
+
+        public static void SetCCPath(string to) {
+            _CCDirPath = to;
+            SaveKeyToUserData("cc-path", to);
         }
 
         public static string GetKey(string savedata, string key, string type = ".*?") {
@@ -417,6 +426,9 @@ namespace gdtools {
                         case "dev-mode":
                             Settings.DevMode = Int32.Parse(val) == 1 ? true : false;
                             break;
+                        case "cc-path":
+                            _CCDirPath = val;
+                            break;
                     }
                 }
             }
@@ -428,7 +440,9 @@ namespace gdtools {
             if (_path.Contains('\\')) {
                 res = File.ReadAllText(_path);
             } else if (Regex.IsMatch(_path, @"^\d* (.*?)")) {
-                res = RequestLevelData(_path.Split(" ")[0]);
+                string d = RequestLevelData(_path.Split(" ")[0]);
+                if (VerifyRequest(d) != "") return "";
+                return GetRequestKey(d, "4");
             } else {
                 foreach (dynamic lvl in _LevelList) {
                     if (lvl.Name == _path) {
@@ -526,7 +540,7 @@ namespace gdtools {
             return res_obj;
         }
 
-        public static string Merge(string _base, List<string> _parts, bool _link) {
+        public static string Merge(string _base, List<string> _parts, bool _link, bool _reassign) {
             string base_level = GetLevelData(_base);
             if (base_level == null) return "Base level not found!";
             string base_data = DecodeLevelData(GetKey(base_level, "k4"));
@@ -557,6 +571,8 @@ namespace gdtools {
                 string part_data = GetLevelData(part);
                 if (part_data == null) errors.Add($"Part {part} not found");
                 else {
+                    Console.WriteLine(part_data);
+
                     part_data = DecodeLevelData(GetKey(part_data, "k4"));
                     
                     float part_song_offset =
@@ -677,8 +693,8 @@ namespace gdtools {
                 case "-4": return "Request too large";
                 case "-5": return "Bad login info";
                 case "-6": return "Server error";
-                case "":   return "";
-                default:   return "Unknown error";
+                case "":   return "Unknown error";
+                default:   return "";
             }
         }
 

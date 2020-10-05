@@ -56,11 +56,13 @@ namespace gdtools {
         public void DoLoad() {
             Elem.MsgBox LoadInfo = new Elem.MsgBox("Loading...");
             LoadInfo.Show();
+            GDTools.LoadUserData();
             GDTools.DecodeCCFile(GDTools.GetCCPath("LocalLevels"), (string msg, int prog) => LoadInfo.Txt($"{msg} ({prog}%)"));
             GDTools.DecodeCCFile(GDTools.GetCCPath("GameManager"), (string msg, int prog) => LoadInfo.Txt($"{msg} ({prog}%)"));
-            GDTools.LoadUserData();
             LoadInfo.Close();
             LoadInfo.Dispose();
+
+            Program.CheckForUpdates(true);
 
             this.Init();
         }

@@ -10,6 +10,7 @@ namespace gdtools {
             public Elem.Select MergeList;
             public Elem.Text MergeBase;
             public bool MergeLink = false;
+            public bool AutoReassignGroups = true;
 
             public Collabs() {
                 this.Name = "Collab";
@@ -76,7 +77,7 @@ namespace gdtools {
                             Choose.Show();
                         } else if (res == 2) {
                             Elem.ChooseForm c = new Elem.ChooseForm( "Type Level ID", 
-                                new string[] { "IS-INPUT::INT", "::Search", "Cancel" },
+                                new string[] { "IS-INPUT::INT", "::Add", "Cancel" },
                                 "Type in level ID"
                             );
 
@@ -154,7 +155,7 @@ namespace gdtools {
                             Choose.ShowDialog(Select);
                         } else if (res == 2) {
                             Elem.ChooseForm c = new Elem.ChooseForm( "Type Level ID(s)", 
-                                new string[] { "IS-INPUT-BIG::INS", "::Search", "Cancel" },
+                                new string[] { "IS-INPUT-BIG::INS", "::Add", "Cancel" },
                                 "Type in level ID(s) (Separated by spaces)"
                             );
 
@@ -205,12 +206,20 @@ namespace gdtools {
                 MergeLinkToggle.AutoSize = true;
                 MergeLinkToggle.Click += (s, e) =>
                     MergeLink = MergeLinkToggle.Checked;
+                    
+                CheckBox AutoReassignToggle = new CheckBox();
+                AutoReassignToggle.Text = "Reassign groups & colours";
+                AutoReassignToggle.AutoSize = true;
+                AutoReassignToggle.Checked = AutoReassignGroups;
+                AutoReassignToggle.Click += (s, e) =>
+                    AutoReassignGroups = AutoReassignToggle.Checked;
 
                 con.Controls.Add(new Elem.Text("Part merging"));
                 con.Controls.Add(MergeList);
                 con.Controls.Add(MergeBase);
                 con.Controls.Add(MergeControls);
                 con.Controls.Add(MergeLinkToggle);
+                con.Controls.Add(AutoReassignToggle);
 
                 this.Controls.Add(con);
                 if (!Settings.DevMode) this.Controls.Add(new Elem.DevToolWarning((s, e) => { con.Visible = true; }));
@@ -224,7 +233,7 @@ namespace gdtools {
 
                     List<string> parts = new List<string> {};
                     foreach (Elem.Select.SelectItem x in MergeList.Items) parts.Add(x.Text);
-                    string err = GDTools.Merge(MergeBase.Text.Substring("Base: ".Length), parts, MergeLink);
+                    string err = GDTools.Merge(MergeBase.Text.Substring("Base: ".Length), parts, MergeLink, AutoReassignGroups);
                     if (err.Length > 0) return err;
 
                     MessageBox.Show("Succesfully merged! :)");
