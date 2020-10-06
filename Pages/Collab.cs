@@ -11,6 +11,7 @@ namespace gdtools {
             public Elem.Text MergeBase;
             public bool MergeLink = false;
             public bool AutoReassignGroups = true;
+            public bool UseReferenceObjects = true;
 
             public Collabs() {
                 this.Name = "Collab";
@@ -201,6 +202,13 @@ namespace gdtools {
                     if (err.Length > 0) MessageBox.Show(err, "Error merging");
                 }));
 
+                CheckBox UseReferenceToggle = new CheckBox();
+                UseReferenceToggle.Text = "Use reference objects";
+                UseReferenceToggle.AutoSize = true;
+                UseReferenceToggle.Checked = UseReferenceObjects;
+                UseReferenceToggle.Click += (s, e) =>
+                   UseReferenceObjects = UseReferenceToggle.Checked;
+
                 CheckBox MergeLinkToggle = new CheckBox();
                 MergeLinkToggle.Text = "Link part objects";
                 MergeLinkToggle.AutoSize = true;
@@ -208,7 +216,7 @@ namespace gdtools {
                     MergeLink = MergeLinkToggle.Checked;
                     
                 CheckBox AutoReassignToggle = new CheckBox();
-                AutoReassignToggle.Text = "Reassign groups & colours";
+                AutoReassignToggle.Text = "Reassign groups and colours";
                 AutoReassignToggle.AutoSize = true;
                 AutoReassignToggle.Checked = AutoReassignGroups;
                 AutoReassignToggle.Click += (s, e) =>
@@ -220,6 +228,7 @@ namespace gdtools {
                 con.Controls.Add(MergeControls);
                 con.Controls.Add(MergeLinkToggle);
                 con.Controls.Add(AutoReassignToggle);
+                con.Controls.Add(UseReferenceToggle);
 
                 this.Controls.Add(con);
                 if (!Settings.DevMode) this.Controls.Add(new Elem.DevToolWarning((s, e) => { con.Visible = true; }));
@@ -233,7 +242,7 @@ namespace gdtools {
 
                     List<string> parts = new List<string> {};
                     foreach (Elem.Select.SelectItem x in MergeList.Items) parts.Add(x.Text);
-                    string err = GDTools.Merge(MergeBase.Text.Substring("Base: ".Length), parts, MergeLink, AutoReassignGroups);
+                    string err = GDTools.Merge(MergeBase.Text.Substring("Base: ".Length), parts, UseReferenceObjects, MergeLink, AutoReassignGroups);
                     if (err.Length > 0) return err;
 
                     MessageBox.Show("Succesfully merged! :)");

@@ -195,7 +195,7 @@ namespace gdtools {
                 this.WordWrap = true;
                 this.Multiline = _multi;
                 this.ScrollBars = ScrollBars.Vertical;
-                if (_big) this.Size = new Size(Meth._S(150),Meth._S(40));
+                if (_big) this.Size = new Size(Meth._S(150), Meth._S(40));
                 if (_huge) this.Size = new Size(Meth._S(350), Meth._S(30));
 
                 this.Text = _def == "" ? _desc : _def;

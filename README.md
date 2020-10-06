@@ -42,10 +42,12 @@ All of my GD tools, in one program. GDShare & More.
  * Create & manage backups
  * Level editing tools
    * Create guidelines from BPM
+   * Generate blending glow on top of T3
 
 ### WIP:
 
  * Collab part auto-merging tool
+ * Level data editor
 
 ### Future:
 

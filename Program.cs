@@ -87,7 +87,8 @@ namespace gdtools {
                         MessageBox.Show("You are using a newer versin than last stable release.", "Version check");
                 }
             } catch (Exception err) {
-                MessageBox.Show($"Error: {err}", "Error");
+                if (!_startup)
+                    MessageBox.Show($"Error: {err}", "Error");
             }
         }
 

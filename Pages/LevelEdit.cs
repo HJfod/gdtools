@@ -219,6 +219,17 @@ namespace gdtools {
                     c.Show();
                 }, "Generates a piece of T4 glow at the start of the level."));
 
+                this.EditPanel.Controls.Add(new Elem.But("Edit level data", (s, e) => {
+                    Elem.BasicForm DataEditor = new Elem.BasicForm();
+
+                    TableLayoutPanel DataEditorMain = new TableLayoutPanel();
+                    DataEditorMain.AutoSize = true;
+
+                    DataEditorEditor = new TableLayoutPanel();
+
+                    DataEditor.Show();
+                }));
+
                 this.EditPanel.Controls.Add(new Elem.But("Export this level", (s, e) => {
                     FolderBrowserDialog fbd = new FolderBrowserDialog();
                     DialogResult dr = fbd.ShowDialog();

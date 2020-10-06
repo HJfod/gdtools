@@ -540,7 +540,7 @@ namespace gdtools {
             return res_obj;
         }
 
-        public static string Merge(string _base, List<string> _parts, bool _link, bool _reassign) {
+        public static string Merge(string _base, List<string> _parts, bool _refobj, bool _link, bool _reassign) {
             string base_level = GetLevelData(_base);
             if (base_level == null) return "Base level not found!";
             string base_data = DecodeLevelData(GetKey(base_level, "k4"));
