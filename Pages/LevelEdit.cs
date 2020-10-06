@@ -220,13 +220,15 @@ namespace gdtools {
                 }, "Generates a piece of T4 glow at the start of the level."));
 
                 this.EditPanel.Controls.Add(new Elem.But("Edit level data", (s, e) => {
+                    Console.WriteLine(this.SelectedLevelContent.k4.Replace(";", "\n"));
+
                     Elem.BasicForm DataEditor = new Elem.BasicForm();
 
                     TableLayoutPanel DataEditorMain = new TableLayoutPanel();
                     DataEditorMain.AutoSize = true;
                     DataEditorMain.Dock = DockStyle.Fill;
 
-                    DataEditorEditor = new TableLayoutPanel();
+                    TableLayoutPanel ataEditorEditor = new TableLayoutPanel();
 
                     DataEditor.Show();
                 }));

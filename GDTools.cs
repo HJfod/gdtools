@@ -565,6 +565,16 @@ namespace gdtools {
 
             List<string> errors = new List<string> {};
 
+            /*
+             *  Use animate trigger for reference object
+             *
+             *  ID (1): 1585
+             *  Target Group: (51)
+             *  Animation ID: (76)
+             *
+             *  So here's the plan: Animate trigger with Group target ID 999 is used as a reference
+             */
+
             foreach (string part in _parts) {
                 if (part == _base) continue;
 
