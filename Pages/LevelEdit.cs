@@ -224,6 +224,7 @@ namespace gdtools {
 
                     TableLayoutPanel DataEditorMain = new TableLayoutPanel();
                     DataEditorMain.AutoSize = true;
+                    DataEditorMain.Dock = DockStyle.Fill;
 
                     DataEditorEditor = new TableLayoutPanel();
 
