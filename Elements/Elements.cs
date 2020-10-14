@@ -182,9 +182,14 @@ namespace gdtools {
         }
 
         public class Input : TextBox {
-            private bool onlyNum = false;
-            private bool allowDot = false;
-            private bool allowSpace = false;
+            private class AllowC {
+                public bool num = false;
+                public bool dot = false;
+                public bool space = false;
+                public bool neg = false;
+            };
+            
+            private AllowC Allow = new AllowC();
 
             public Input(string _name = "__input", string _type = "ANY", string _desc = "", string _def = "", bool _big = false, bool _multi = true, bool _huge = false) {
                 Meth.HandleTheme(this);
@@ -209,9 +214,10 @@ namespace gdtools {
                 this.KeyPress += (o, e) => {
                     bool hand = false;
 
-                    if (this.onlyNum) hand = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
-                    if (this.allowDot) if (char.IsPunctuation(e.KeyChar)) hand = false;
-                    if (this.allowSpace) if (char.IsWhiteSpace(e.KeyChar)) hand = false;
+                    if (this.Allow.num) hand = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
+                    if (this.Allow.dot) if (char.IsPunctuation(e.KeyChar)) hand = false;
+                    if (this.Allow.space) if (char.IsWhiteSpace(e.KeyChar)) hand = false;
+                    if (this.Allow.neg) if ((Keys)e.KeyChar == Keys.Subtract || (Keys)e.KeyChar == Keys.Add) hand = false;
 
                     e.Handled = hand;
                 };
@@ -222,9 +228,10 @@ namespace gdtools {
             }
 
             public void SetType(string _t) {
-                onlyNum = _t == "INT" || _t == "FLT" || _t == "INS";
-                allowDot = _t == "FLT";
-                allowSpace = _t == "INS";
+                this.Allow.num = _t == "INT" || _t == "FLT" || _t == "INS" || _t == "INN";
+                this.Allow.neg = _t == "INN";
+                this.Allow.dot = _t == "FLT";
+                this.Allow.space = _t == "INS";
             }
         }
 

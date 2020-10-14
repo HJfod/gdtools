@@ -300,6 +300,68 @@ namespace gdtools {
                     DataEditor.Show();
                 }));
 
+                this.EditPanel.Controls.Add(new Elem.But("Rearrange Groups And Colours", (s, e) => {
+                    Elem.BasicForm c = new Elem.BasicForm();
+                    c.Text = "Rearrange Groups And Colours";
+                    c.Size = new Size(Meth._S(350),Meth._S(250));
+
+                    string newData = this.SelectedLevelContent.k4;
+                    
+                    TableLayoutPanel con = new TableLayoutPanel();
+                    con.AutoSize = true;
+
+                    con.ColumnCount = 3;
+                    con.RowCount = 7;
+
+                    con.Controls.Add(new Elem.Text("Group Range"), 0, 0);
+                    con.Controls.Add(new Elem.Input("__G_RANGE", "ANY", "", "x - y", false, false), 0, 1);
+
+                    con.Controls.Add(new Elem.Text("Offset"), 1, 0);
+                    con.Controls.Add(new Elem.Input("__G_OFF", "INN", "", "+0", false, false), 1, 1);
+
+                    con.Controls.Add(new Elem.Text(""), 0, 2);
+
+                    con.Controls.Add(new Elem.Text("Color Range"), 0, 3);
+                    con.Controls.Add(new Elem.Input("__C_RANGE", "ANY", "", "x - y", false, false), 0, 4);
+
+                    con.Controls.Add(new Elem.Text("Offset"), 1, 3);
+                    con.Controls.Add(new Elem.Input("__C_OFF", "INN", "", "+0", false, false), 1, 4);
+
+                    con.Controls.Add(new Elem.Text(""), 0, 5);
+
+                    con.Controls.Add(new Elem.But("Apply changes", (s, e) => {
+                        try {
+                            string grang = con.Controls.Find("__G_RANGE", true)[0].Text.Trim();
+                            if (!Regex.IsMatch(grang, @"\d+\s*\-\s*\d+")) throw new Exception("Invalid input in group range!");
+
+                            string goff = con.Controls.Find("__G_OFF", true)[0].Text.Trim();
+                            if (!Regex.IsMatch(goff, @"[+|-]?\s*\d+")) throw new Exception("Invalid input in group offset!");
+
+                            string crang = con.Controls.Find("__C_RANGE", true)[0].Text.Trim();
+                            if (!Regex.IsMatch(crang, @"\d+\s*\-\s*\d+")) throw new Exception("Invalid input in color range!");
+
+                            string coff = con.Controls.Find("__C_OFF", true)[0].Text.Trim();
+                            if (!Regex.IsMatch(coff, @"[+|-]?\s*\d+")) throw new Exception("Invalid input in color offset!");
+
+                            // groups are separated like a.b.c.d.e
+                            // colors are just the color id
+
+                            // things you need to affect: color triggers, pulse triggers, literally every trigger that takes groups
+
+                            foreach (dynamic obj in GDTools.GetObjectsByKey(newData, "ARR_21_22_57"))
+                                Console.WriteLine(obj.Data);
+                        } catch (Exception err) {
+                            MessageBox.Show($"Error: {err}", "Error");
+                        }
+                    }), 0, 6);
+
+                    con.Controls.Add(new Elem.But("Cancel", (s, e) => c.Dispose()), 1, 6);
+
+                    c.Controls.Add(con);
+
+                    c.Show();
+                }));
+
                 this.EditPanel.Controls.Add(new Elem.But("Export this level", (s, e) => {
                     FolderBrowserDialog fbd = new FolderBrowserDialog();
                     DialogResult dr = fbd.ShowDialog();

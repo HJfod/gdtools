@@ -510,26 +510,21 @@ namespace gdtools {
                 string[] obj_data = obj.Split(",");
                 for (int i = 0; i < obj_data.Length; i += 2) {
                     if (_key != null) {
-                        if (obj_data[i] == _key) {
-                            if (_val != null) {
-                                if (_val.StartsWith("ARR_")) {
-                                    foreach (string val in _val.Substring(4).Split("_")) {
+                        string[] keys = _key.StartsWith("ARR_") ? _key.Substring(4).Split("_") : new string[] { _key };
+                        foreach (string key in keys)
+                            if (obj_data[i] == key) {
+                                if (_val != null) {
+                                    string[] vals = _val.StartsWith("ARR_") ? _val.Substring(4).Split("_") : new string[] { _val };
+                                    foreach (string val in vals)
                                         if (obj_data[i+1] == val) {
                                             res_obj.Add(new { Index = ix, Data = obj });
                                             break;
-                                        }
-                                    }
+                                        };
                                 } else {
-                                    if (obj_data[i+1] == _val) {
-                                        res_obj.Add(new { Index = ix, Data = obj });
-                                        break;
-                                    }
+                                    res_obj.Add(new { Index = ix, Data = obj });
+                                    break;
                                 }
-                            } else {
-                                res_obj.Add(new { Index = ix, Data = obj });
-                                break;
-                            }
-                        }
+                            };
                     } else {
                         res_obj.Add(new { Index = ix, Data = obj });
                         break;
