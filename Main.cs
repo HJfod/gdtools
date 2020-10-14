@@ -16,6 +16,15 @@ namespace gdtools {
             for (int ix = controls.Count - 1; ix >= 0; --ix)
                 if (dispose) controls[ix].Dispose(); else controls.RemoveAt(ix);
         }
+
+        public static T[] Red<T>(this T[] data, int index, int length) {
+            T[] result = new T[length];
+            if (data.Length < index + length)
+                Array.Copy(data, index, result, 0, length - (data.Length - index));
+            else
+                Array.Copy(data, index, result, 0, length);
+            return result;
+        }
     }
 
     public partial class Main : Form {

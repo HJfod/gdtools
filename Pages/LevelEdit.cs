@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Text;
+using System.Linq;
 
 namespace gdtools {
     namespace Pages {
@@ -220,15 +221,81 @@ namespace gdtools {
                 }, "Generates a piece of T4 glow at the start of the level."));
 
                 this.EditPanel.Controls.Add(new Elem.But("Edit level data", (s, e) => {
-                    Console.WriteLine(this.SelectedLevelContent.k4.Replace(";", "\n"));
-
                     Elem.BasicForm DataEditor = new Elem.BasicForm();
+                    DataEditor.Size = new Size(800, 600);
+
+                    int ControlsHeight = 50;
 
                     TableLayoutPanel DataEditorMain = new TableLayoutPanel();
                     DataEditorMain.AutoSize = true;
                     DataEditorMain.Dock = DockStyle.Fill;
 
-                    TableLayoutPanel ataEditorEditor = new TableLayoutPanel();
+                    TableLayoutPanel DataEditorEditor = new TableLayoutPanel();
+                    DataEditorEditor.ColumnCount = 2;
+                    DataEditorEditor.Dock = DockStyle.Fill;
+                    DataEditorEditor.AutoScroll = true;
+                    DataEditorEditor.Size = new Size(DataEditor.Size.Width - 30, DataEditor.Size.Height - ControlsHeight - 100);
+
+                    FlowLayoutPanel DataEditorControls = new FlowLayoutPanel();
+                    DataEditorControls.AutoSize = true;
+                    DataEditorControls.Dock = DockStyle.Bottom;
+                    DataEditorControls.Height = ControlsHeight;
+
+                    string[] objs = this.SelectedLevelContent.k4.Split(";");
+                    int page = 0;
+                    int show = 20;
+
+                    Elem.Text PageNum = new Elem.Text();
+                    Elem.Text PageAmt = new Elem.Text();
+
+                    void PageUpdate() {
+                        DataEditorEditor.Controls.Clear(true);
+
+                        PageNum.Text = $"Page: {page / show + 1} / {objs.Length / show + 1}";
+                        PageAmt.Text = $"Amount of object(s) shown on page: {show}";
+                        
+                        int i = 0;
+                        foreach (string obj in objs.Red(page, show)) {
+                            if (obj == null) continue;
+                            DataEditorEditor.Controls.Add(new Elem.Text($"{page + i}:"), 0, i);
+                            DataEditorEditor.Controls.Add(new Elem.Text($"{obj}"), 1, i);
+
+                            i++;
+                        }
+                    };
+
+                    PageUpdate();
+
+                    DataEditorControls.Controls.Add(PageNum);
+                    DataEditorControls.Controls.Add(PageAmt);
+                    DataEditorControls.Controls.Add(new Elem.But("Next", (s, e) => {
+                        if (page < objs.Length) { page += show; PageUpdate(); };
+                    }));
+                    DataEditorControls.Controls.Add(new Elem.But("Previous", (s, e) => {
+                        if (page > 0) { page -= show; PageUpdate(); };
+                    }));
+                    DataEditorControls.Controls.Add(new Elem.But("Go to page", (s, e) => {
+                        Elem.ChooseForm c = new Elem.ChooseForm( "Go to page", 
+                            new string[] { "IS-INPUT::INT", "::Go", "Cancel" }
+                        );
+
+                        c.Show();
+
+                        c.FinishStr += resc => {
+                            if (resc != "") {
+                                int np = Int32.Parse(resc) - 1;
+                                if (np >= 0 && np <= objs.Length / show)
+                                    page = np * show;
+
+                                PageUpdate();
+                                c.Dispose();
+                            }
+                        };
+                    }));
+
+                    DataEditorMain.Controls.Add(DataEditorEditor);
+                    DataEditorMain.Controls.Add(DataEditorControls);
+                    DataEditor.Controls.Add(DataEditorMain);
 
                     DataEditor.Show();
                 }));
