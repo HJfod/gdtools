@@ -242,7 +242,7 @@ namespace gdtools {
 
                     List<string> parts = new List<string> {};
                     foreach (Elem.Select.SelectItem x in MergeList.Items) parts.Add(x.Text);
-                    string err = GDTools.Merge(MergeBase.Text.Substring("Base: ".Length), parts, UseReferenceObjects, MergeLink, AutoReassignGroups);
+                    string err = GDTools.MergeUsingReference(MergeBase.Text.Substring("Base: ".Length), parts, MergeLink, AutoReassignGroups);
                     if (err.Length > 0) return err;
 
                     MessageBox.Show("Succesfully merged! :)");

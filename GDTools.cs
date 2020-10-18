@@ -10,6 +10,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.Net.Http;
+using System.Drawing;
+using System.Windows;
+using System.Numerics;
 
 namespace gdtools {
     public class GDTools {
@@ -535,6 +538,119 @@ namespace gdtools {
             return res_obj;
         }
 
+        public static string MergeUsingReference(string _base, List<string> _parts, bool _link, bool _reassign) {
+            string base_level = GetLevelData(_base);
+            if (base_level == null) return "Base level not found!";
+            string base_data = DecodeLevelData(GetKey(base_level, "k4"));
+
+            string new_base_data = base_data;
+
+            string REF_ID = "1585";
+
+            /*
+             *  Use animate trigger for reference object
+             *
+             *  ID (1): 1585
+             *  Target Group: (51)
+             *  Animation ID: (76)
+             *
+             *  So here's the plan: Animate trigger with Group target ID 999 is used as a reference
+             */
+
+            List<dynamic> base_ref_obj = GetObjectsByKey(base_data, "1", REF_ID);
+
+            List<string> errors = new List<string> ();
+
+            List<dynamic> part_data_sorted = new List<dynamic> ();
+            List<float> part_data_sort = new List<float> ();
+
+            foreach (string part in _parts) {
+                if (part == _base) continue;
+                
+                string part_data = GetLevelData(part);
+                if (part_data == null) errors.Add($"Part {part} not found");
+                else {
+                    part_data = DecodeLevelData(GetKey(part_data, "k4"));
+
+                    part_data_sort.Add(
+                        GetStartKey(part_data, "kA13") == "" ? 0F : float.Parse(GetStartKey(part_data, "kA13"))
+                    );
+                    part_data_sorted.Add(new { Name = part, Data = part_data });
+                }
+            }
+
+            part_data_sorted = part_data_sorted.SortLike(part_data_sort).ToList<dynamic>();
+
+            if (base_ref_obj.Count < part_data_sorted.Count)
+                return "There aren't reference objects in base for all parts!";
+            if (base_ref_obj.Count > part_data_sorted.Count)
+                return "There are more reference objects in base than parts! (This will prolly be fixed in the future, but for now, only have reference objects for the parts you are merging.)";
+
+            int link_id = 1;
+
+            if (_link) foreach (dynamic obj in GetObjectsByKey(base_data, "108")) link_id++;
+
+            int ix = 0;
+            foreach (dynamic part_data in part_data_sorted) {
+                string ref_obj = null;
+                foreach (dynamic refe in GetObjectsByKey(part_data.Data, "1", REF_ID))
+                    if (GetObjectKey(refe.Data, "51") == "999")
+                        ref_obj = refe.Data;
+                
+                if (ref_obj == null) errors.Add($"Part {part_data.Name} does not contain a reference object, unable to merge");
+                else {
+                    Point base_ref_pos = new Point (
+                        Int32.Parse(GetObjectKey(base_ref_obj[ix].Data, "2")),
+                        Int32.Parse(GetObjectKey(base_ref_obj[ix].Data, "3"))
+                    );
+
+                    Point part_ref_pos = new Point (
+                        Int32.Parse(GetObjectKey(ref_obj, "2")),
+                        Int32.Parse(GetObjectKey(ref_obj, "3"))
+                    );
+
+                    Point dis = new Point(
+                        base_ref_pos.X - part_ref_pos.X,
+                        base_ref_pos.Y - part_ref_pos.Y
+                    );
+
+                    List<dynamic> part_obj = GetObjectsByKey(part_data.Data);
+
+                    string new_part_data = "";
+
+                    foreach (dynamic obj in part_obj) {
+                        if (obj.Data == "") continue;
+
+                        string yData = SetObjectKey(obj.Data, "3",
+                            (double.Parse(GetObjectKey(obj.Data, "3")) + dis.Y).ToString()
+                        );
+
+                        new_part_data += SetObjectKey(yData, "2", 
+                            (double.Parse(GetObjectKey(yData, "2")) + dis.X).ToString()
+                        ) + (_link ? $",108,{link_id}" : "") + ";";
+                    }
+
+                    if (_link) link_id++;
+
+                    new_base_data += new_part_data;
+                }
+                ix++;
+            }
+
+            new_base_data = SetKey(
+                SetKey(base_level, "k4", EncodeLevelData(new_base_data)),
+                "k2", $"MERGE@{GetKey(base_level, "k2")}"
+            );
+
+            new_base_data = Regex.Replace(new_base_data, @"<k>k_\d+<\/k>", "");
+
+            string i_err = ImportLevel(new_base_data, true);
+
+            if (i_err != null) errors.Add(i_err);
+
+            return errors.Count > 0 ? $"List of errors:\n{String.Join("\n", errors)}" : "";
+        }
+
         public static string Merge(string _base, List<string> _parts, bool _refobj, bool _link, bool _reassign) {
             string base_level = GetLevelData(_base);
             if (base_level == null) return "Base level not found!";
@@ -559,16 +675,6 @@ namespace gdtools {
             if (_link) foreach (dynamic obj in GetObjectsByKey(base_data, "108")) link_id++;
 
             List<string> errors = new List<string> {};
-
-            /*
-             *  Use animate trigger for reference object
-             *
-             *  ID (1): 1585
-             *  Target Group: (51)
-             *  Animation ID: (76)
-             *
-             *  So here's the plan: Animate trigger with Group target ID 999 is used as a reference
-             */
 
             foreach (string part in _parts) {
                 if (part == _base) continue;
