@@ -4,3 +4,4 @@ userdata.user
 userdata.gdt
 .vscode/
 Autobackup/.autobackup
+Autobackup/.errlog

@@ -11,6 +11,7 @@
 #include <chrono>
 #include <ctime>
 #include <time.h>
+#include <direct.h>
 
 #define GD_NOT_OPEN                     5
 #define GD_IS_OPEN                      6
@@ -18,15 +19,22 @@
 #define ERR_GET_PROCESS_LIST            10
 #define ERR_NO_SRC_DIR_SET              11
 #define ERR_NO_DEST_DIR_SET             12
+#define ERR_SRC_DOESNT_EXIST            13
+#define ERR_DEST_DOESNT_EXIST           14
 #define ERR_SETTINGS_FILE_NOT_FOUND     2
+#define ERR_UNKNOWN                     3
 
 #define BACKUP_SUCCESS                  20
 #define ERR_CCLOCALLEVELS_NOT_FOUND     21
 #define ERR_CCGAMEMANAGER_NOT_FOUND     22
+#define ERR_COPY_FILE_FROM_NOT_FOUND    25
+#define COPY_SUCCESS                    26
+#define ERR_BACKUP_CANT_CREATE_DIR      23
 
-#define DEBUG true
+#define DEBUG false
 #define VERSION "v1.0"
 #define LOGFILE ".errlog"
+#define BACKUPTEXT "GDTOOLS_BACKUP_"
 
 // clang++ auto-backup.cpp -o ab.exe -lshell32 -lole32
 
@@ -46,13 +54,13 @@ std::string GetCCPath(std::string WHICH = "LocalLevels", std::string PATH = "") 
     return RESULT;
 }
 
-inline bool FileExists (const std::string& name) {
+inline bool FileDirExists (const std::string& name) {
   struct stat buffer;
   return (stat (name.c_str(), &buffer) == 0); 
 }
 
 void writeLog(std::string _log) {
-    ofstream logfile (LOGFILE);
+    std::ofstream logfile (LOGFILE);
     if (logfile.is_open()) {
         logfile << _log;
         logfile.close();
@@ -60,7 +68,8 @@ void writeLog(std::string _log) {
 }
 
 void quit(int _CODE) {
-    writeLog("Application quit with error code " + _CODE + "\nCheck https://github.com/HJfod/gdtools/");
+    writeLog("Application quit with error code " + std::to_string(_CODE) +
+    "\nCheck https://github.com/HJfod/gdtools/blob/master/Autobackup/ErrorCodes.md for details");
     std::cout << "Error code: " << _CODE << std::endl;
     std::exit(_CODE);
 }
@@ -118,12 +127,40 @@ std::string GetProcessName(DWORD processID) {
     return std::string(w.begin(), w.end());
 }
 
-int CreateBackup() {
+int CopyFile(std::string from, std::string to) {
+    if (!FileDirExists(from))
+        quit(ERR_COPY_FILE_FROM_NOT_FOUND);
+    std::ifstream  src(from, std::ios::binary);
+    std::ofstream  dst(to,   std::ios::binary);
+    dst << src.rdbuf();
+
+    return COPY_SUCCESS;
+}
+
+int CreateBackup(std::string *ret) {
     std::string ccll = GetCCPath("LocalLevels", sett::src);
     std::string ccgm = GetCCPath("GameManager", sett::src);
 
-    if (!FileExists(ccll)) quit(ERR_CCLOCALLEVELS_NOT_FOUND);
-    if (!FileExists(ccgm)) quit(ERR_CCGAMEMANAGER_NOT_FOUND);
+    if (!FileDirExists(ccll)) quit(ERR_CCLOCALLEVELS_NOT_FOUND);
+    if (!FileDirExists(ccgm)) quit(ERR_CCGAMEMANAGER_NOT_FOUND);
+
+    std::time_t t = std::time(0);
+    std::tm now;
+    localtime_s(&now, &t);
+    std::stringstream nams;
+    nams << sett::dest << "\\" << BACKUPTEXT
+    << (now.tm_year + 1900) << '-' << (now.tm_mon + 1) << '-' <<  now.tm_mday << "\n";
+    std::string backuppath = nams.str();
+
+    int m = _mkdir(backuppath.c_str());
+    if (m != 0) {
+        std::cout << errno;
+        quit(ERR_BACKUP_CANT_CREATE_DIR);
+    }
+
+    //CopyFile(ccll, std::dest + "\\CCLocalLevels.dat");
+
+    *ret = backuppath;
 
     return BACKUP_SUCCESS;
 }
@@ -150,12 +187,13 @@ void GDOnCloseBackuper() {
             case GD_NOT_OPEN:
                 if (makeOnNext >= sett::gd_check_length) {
                     std::cout << "Creating backup..." << std::endl;
-                    switch (CreateBackup()) {
+                    std::string succ;
+                    switch (CreateBackup(&succ)) {
                         case BACKUP_SUCCESS:
-                            std::time_t time = std::time(NULL);
-                            char time_str[26];
-                            std::cout << "Succesfully made backup at " << ctime_s(time_str, sizeof time_str, &time) << std::endl;
+                            std::cout << "Succesfully made backup!" << std::endl << succ << std::endl;
                             break;
+                        default:
+                            quit(ERR_UNKNOWN);
                     }
                     makeOnNext = 0;
                 }
@@ -204,6 +242,8 @@ int main() {
 
     //if (sett::src.empty()) quit(ERR_NO_SRC_DIR_SET);
     if (sett::dest.empty()) quit(ERR_NO_DEST_DIR_SET);
+    if (!FileDirExists(sett::src.empty() ? GetCCPath() : sett::src)) quit(ERR_SRC_DOESNT_EXIST);
+    if (!FileDirExists(sett::dest)) quit(ERR_DEST_DOESNT_EXIST);
 
     if (DEBUG || sett::debug) {
         if (DEBUG) std::cout << "Loaded in " << (std::chrono::high_resolution_clock::now() - time).count() << "ns" << std::endl;
@@ -220,6 +260,16 @@ int main() {
         std::cout << "gd_check_rate: "      << sett::gd_check_rate << std::endl;
         std::cout << "gd_check_length: "    << sett::gd_check_length << std::endl;
         std::cout << "debug: "              << sett::debug << std::endl << std::endl;
+    }
+
+    std::cout << "Creating backup..." << std::endl;
+    std::string succ;
+    switch (CreateBackup(&succ)) {
+        case BACKUP_SUCCESS:
+            std::cout << "Succesfully made backup!" << std::endl << succ << std::endl;
+            break;
+        default:
+            quit(ERR_UNKNOWN);
     }
 
     if (sett::create_on_gd_close) {
