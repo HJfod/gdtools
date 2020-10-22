@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <ShlObj.h>
 #include <sstream>
 #include <tchar.h>
 #include <windows.h>
@@ -20,10 +21,46 @@
 #define ERR_SETTINGS_FILE_NOT_FOUND     2
 
 #define BACKUP_SUCCESS                  20
+#define ERR_CCLOCALLEVELS_NOT_FOUND     21
+#define ERR_CCGAMEMANAGER_NOT_FOUND     22
 
 #define DEBUG true
+#define VERSION "v1.0"
+#define LOGFILE ".errlog"
+
+// clang++ auto-backup.cpp -o ab.exe -lshell32 -lole32
+
+std::string GetCCPath(std::string WHICH = "LocalLevels", std::string PATH = "") {
+    if (PATH != "") return PATH + "\\CC" + WHICH + ".dat";
+
+    wchar_t* localAppData = 0;
+    SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &localAppData);
+
+    std::wstring CCW (localAppData);
+
+    std::string RESULT ( CCW.begin(), CCW.end() );
+    RESULT += "\\GeometryDash\\CC" + WHICH + ".dat";
+
+    CoTaskMemFree(static_cast<void*>(localAppData));
+    
+    return RESULT;
+}
+
+inline bool FileExists (const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0); 
+}
+
+void writeLog(std::string _log) {
+    ofstream logfile (LOGFILE);
+    if (logfile.is_open()) {
+        logfile << _log;
+        logfile.close();
+    }
+}
 
 void quit(int _CODE) {
+    writeLog("Application quit with error code " + _CODE + "\nCheck https://github.com/HJfod/gdtools/");
     std::cout << "Error code: " << _CODE << std::endl;
     std::exit(_CODE);
 }
@@ -46,7 +83,7 @@ enum SETT_CODES {
     SRCDIR, DESTDIR, ENABLED, RATE, LIMIT, LAST, ONCLOSE, COMPRESS, CHECKRATE, DEBUGMODE, CHECKLENGTH
 };
 
-int GET_CODE(std::string _line) {
+int GetCode(std::string _line) {
     if (_line == "src")                 return SRCDIR;
     if (_line == "dest")                return DESTDIR;
     if (_line == "enabled")             return ENABLED;
@@ -82,7 +119,11 @@ std::string GetProcessName(DWORD processID) {
 }
 
 int CreateBackup() {
+    std::string ccll = GetCCPath("LocalLevels", sett::src);
+    std::string ccgm = GetCCPath("GameManager", sett::src);
 
+    if (!FileExists(ccll)) quit(ERR_CCLOCALLEVELS_NOT_FOUND);
+    if (!FileExists(ccgm)) quit(ERR_CCGAMEMANAGER_NOT_FOUND);
 
     return BACKUP_SUCCESS;
 }
@@ -131,6 +172,8 @@ int main() {
     std::string line;
     std::ifstream settings_file (".autobackup");
 
+    std::cout << "GDTools Autobackup " << VERSION << std::endl;
+    std::cout << "Developed by HJfod" << std::endl;
     std::cout << "Loading .autobackup " << (DEBUG ? "[DEBUG ON]" : "") << "..." << std::endl << std::endl;
 
     std::chrono::steady_clock::time_point time;
@@ -142,7 +185,7 @@ int main() {
         while ( getline (settings_file, line) ) {
             std::string val = line.substr(line.find(" ") + 1);
 
-            switch (GET_CODE(line.substr(0, line.find(" ")))) {
+            switch (GetCode(line.substr(0, line.find(" ")))) {
                 case SRCDIR:        sett::src = val; break;
                 case DESTDIR:       sett::dest = val; break;
                 case ENABLED:       sett::enabled = val == "1"; break;
@@ -159,7 +202,7 @@ int main() {
         settings_file.close();
     } else quit(ERR_SETTINGS_FILE_NOT_FOUND);
 
-    if (sett::src.empty()) quit(ERR_NO_SRC_DIR_SET);
+    //if (sett::src.empty()) quit(ERR_NO_SRC_DIR_SET);
     if (sett::dest.empty()) quit(ERR_NO_DEST_DIR_SET);
 
     if (DEBUG || sett::debug) {
