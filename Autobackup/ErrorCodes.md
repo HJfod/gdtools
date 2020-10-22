@@ -1,3 +1,4 @@
+<table>
 GD_NOT_OPEN                     5
 GD_IS_OPEN                      6
 ERR_GET_PROCESS_LIST            10
@@ -7,3 +8,4 @@ ERR_SETTINGS_FILE_NOT_FOUND     2
 BACKUP_SUCCESS                  20
 ERR_CCLOCALLEVELS_NOT_FOUND     21
 ERR_CCGAMEMANAGER_NOT_FOUND     22
+</table>
