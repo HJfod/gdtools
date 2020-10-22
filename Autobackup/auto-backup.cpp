@@ -149,14 +149,11 @@ int CreateBackup(std::string *ret) {
     localtime_s(&now, &t);
     std::stringstream nams;
     nams << sett::dest << "\\" << BACKUPTEXT
-    << (now.tm_year + 1900) << '-' << (now.tm_mon + 1) << '-' <<  now.tm_mday << "\n";
+    << (now.tm_year + 1900) << '-' << (now.tm_mon + 1) << '-' <<  now.tm_mday;
     std::string backuppath = nams.str();
 
-    int m = _mkdir(backuppath.c_str());
-    if (m != 0) {
-        std::cout << errno;
+    if (_mkdir(backuppath.c_str()) != 0)
         quit(ERR_BACKUP_CANT_CREATE_DIR);
-    }
 
     //CopyFile(ccll, std::dest + "\\CCLocalLevels.dat");
 
@@ -212,7 +209,7 @@ int main() {
 
     std::cout << "GDTools Autobackup " << VERSION << std::endl;
     std::cout << "Developed by HJfod" << std::endl;
-    std::cout << "Loading .autobackup " << (DEBUG ? "[DEBUG ON]" : "") << "..." << std::endl << std::endl;
+    std::cout << "Loading .autobackup " << (DEBUG ? "[DEBUG ON]" : "") << "..." << std::endl;
 
     std::chrono::steady_clock::time_point time;
     #ifdef DEBUG
@@ -240,13 +237,16 @@ int main() {
         settings_file.close();
     } else quit(ERR_SETTINGS_FILE_NOT_FOUND);
 
+    if (!sett::enabled)
+        return 0;
+
     //if (sett::src.empty()) quit(ERR_NO_SRC_DIR_SET);
     if (sett::dest.empty()) quit(ERR_NO_DEST_DIR_SET);
     if (!FileDirExists(sett::src.empty() ? GetCCPath() : sett::src)) quit(ERR_SRC_DOESNT_EXIST);
     if (!FileDirExists(sett::dest)) quit(ERR_DEST_DOESNT_EXIST);
 
     if (DEBUG || sett::debug) {
-        if (DEBUG) std::cout << "Loaded in " << (std::chrono::high_resolution_clock::now() - time).count() << "ns" << std::endl;
+        if (DEBUG) std::cout << std::endl << "Loaded in " << (std::chrono::high_resolution_clock::now() - time).count() << "ns" << std::endl;
 
         std::cout << "Settings" << std::endl;
         std::cout << "src: "                << sett::src << std::endl;
@@ -260,6 +260,8 @@ int main() {
         std::cout << "gd_check_rate: "      << sett::gd_check_rate << std::endl;
         std::cout << "gd_check_length: "    << sett::gd_check_length << std::endl;
         std::cout << "debug: "              << sett::debug << std::endl << std::endl;
+    } else {
+        std::cout << "Backups directory: " << sett::dest << std::endl << std::endl;
     }
 
     std::cout << "Creating backup..." << std::endl;
