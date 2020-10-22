@@ -29,7 +29,7 @@ limit 5
 | gd_check_length | unsigned int | On how many gd_check_rate timed checks does GD have to be open before making a backup | 3 |   | 2 |
 | debug | intbool (1 / 0) | Whether the program should give extra command line info | 0 |   |   |
 | compress | intbool (1 / 0) | Whether the backups should be compressed or not | 0 |   | 1 |
-| compress_ext | string | The extention of the compressed files | .gbb |   | 1 |
+| compress_ext | string | The extention of the compressed files | .gdb |   | 1 |
 
 Notes
 
