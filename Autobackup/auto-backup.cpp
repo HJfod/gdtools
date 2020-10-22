@@ -43,6 +43,11 @@
 
 // clang++ auto-backup.cpp -o ab.exe -lshell32 -lole32
 
+// TODO :
+// 
+// -delete autobackups over limit
+// -create at set rate
+
 const std::string deleteText(std::string _am) {
     return "This file will be deleted once your set limit of " + _am + " backups has been reached.\n\nIf you'd like to preserve this backup, delete this text file.";
 }
