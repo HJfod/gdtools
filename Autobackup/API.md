@@ -30,7 +30,11 @@ limit 5
 | debug | intbool (1 / 0) | Whether the program should give extra command line info | 0 |   |   |
 | compress | intbool (1 / 0) | Whether the backups should be compressed or not | 0 |   | 1 |
 | compress_ext | string | The extention of the compressed files | .gbb |   | 1 |
-| Notes | -- | -- | -- | -- |
-| * | Not if create_on_gd_close is 1 |   |   |   |
-| 1 | Not currently implemented |   |   |   |
-| 2 | Only set if create_on_gd_close is 1 |   |   |   |
+
+Notes
+
+| Note | Description |
+| ---- | ----------- |
+| * | Not if create_on_gd_close is 1 |
+| 1 | Not currently implemented |
+| 2 | Only set if create_on_gd_close is 1 |
