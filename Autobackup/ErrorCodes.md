@@ -14,6 +14,6 @@
 | ERR_CCLOCALLEVELS_NOT_FOUND | 21 | CCLocalLevels.dat not found in source directory |   |
 | ERR_CCGAMEMANAGER_NOT_FOUND | 22 | CCGameManager.dat not found in source directory |   |
 | ERR_BACKUP_CANT_CREATE_DIR | 23 | Unknown error creating backup directory |   |
-| ERR_BACKUP_CANT_CREATE_DEL_FILE | 27 | Can't create autoRemove.txt |   |
 | ERR_COPY_FILE_FROM_NOT_FOUND | 25 | CC file copier couldn't open source file |   |
 | COPY_SUCCESS | 26 | Succesfully copied CC files | Not an error |
+| ERR_BACKUP_CANT_CREATE_DEL_FILE | 27 | Can't create autoRemove.txt |   |
