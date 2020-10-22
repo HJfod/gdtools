@@ -1,8 +1,3 @@
-| Tables        | Are           | Cool  |
-| ------------- |:-------------:| -----:|
-| col 3 is      | right-aligned |
-| col 2 is      | centered      |
-| zebra stripes | are neat      |
 | Name | Code |
 |------|-----:|
 | GD_NOT_OPEN | 5 |
