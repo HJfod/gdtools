@@ -12,6 +12,7 @@
 #include <ctime>
 #include <time.h>
 #include <direct.h>
+//#include "zipper/zipper.h"
 
 #define GD_NOT_OPEN                     5
 #define GD_IS_OPEN                      6
@@ -23,6 +24,7 @@
 #define ERR_DEST_DOESNT_EXIST           14
 #define ERR_SETTINGS_FILE_NOT_FOUND     2
 #define ERR_UNKNOWN                     3
+#define ERR_INSUFFICIENT_SETTINGS       4
 
 #define BACKUP_SUCCESS                  20
 #define ERR_CCLOCALLEVELS_NOT_FOUND     21
@@ -30,13 +32,20 @@
 #define ERR_COPY_FILE_FROM_NOT_FOUND    25
 #define COPY_SUCCESS                    26
 #define ERR_BACKUP_CANT_CREATE_DIR      23
+#define ERR_BACKUP_CANT_CREATE_DEL_FILE 27
 
 #define DEBUG false
 #define VERSION "v1.0"
 #define LOGFILE ".errlog"
 #define BACKUPTEXT "GDTOOLS_BACKUP_"
+#define DELETEFILE "autoRemove.txt"
+#define COMPRESSEXT "gdb"
 
 // clang++ auto-backup.cpp -o ab.exe -lshell32 -lole32
+
+const std::string deleteText(std::string _am) {
+    return "This file will be deleted once your set limit of " + _am + " backups has been reached.\n\nIf you'd like to preserve this backup, delete this text file.";
+}
 
 std::string GetCCPath(std::string WHICH = "LocalLevels", std::string PATH = "") {
     if (PATH != "") return PATH + "\\CC" + WHICH + ".dat";
@@ -75,21 +84,22 @@ void quit(int _CODE) {
 }
 
 namespace sett {
-    std::string src;
-    std::string dest;
-    bool enabled;
-    unsigned int rate;
-    unsigned int limit;
+    std::string src = "";
+    std::string dest = "";
+    bool enabled = false;
+    unsigned int rate = 0;
+    unsigned int limit = 1;
     unsigned long lastbackup = 0;
     bool create_on_gd_close = 0;
     bool compress = 0;
     unsigned int gd_check_rate = 10;
     bool debug = 0;
-    unsigned int gd_check_length = 1;
+    unsigned int gd_check_length = 3;
+    std::string compressed_ext = COMPRESSEXT;
 }
 
 enum SETT_CODES {
-    SRCDIR, DESTDIR, ENABLED, RATE, LIMIT, LAST, ONCLOSE, COMPRESS, CHECKRATE, DEBUGMODE, CHECKLENGTH
+    SRCDIR, DESTDIR, ENABLED, RATE, LIMIT, LAST, ONCLOSE, COMPRESS, CHECKRATE, DEBUGMODE, CHECKLENGTH, COMPEXT
 };
 
 int GetCode(std::string _line) {
@@ -104,6 +114,7 @@ int GetCode(std::string _line) {
     if (_line == "gd_check_rate")       return CHECKRATE;
     if (_line == "debug")               return DEBUGMODE;
     if (_line == "gd_check_length")     return CHECKLENGTH;
+    if (_line == "compress_ext")        return COMPEXT;
 
     return 0;
 }
@@ -130,11 +141,15 @@ std::string GetProcessName(DWORD processID) {
 int CopyFile(std::string from, std::string to) {
     if (!FileDirExists(from))
         quit(ERR_COPY_FILE_FROM_NOT_FOUND);
-    std::ifstream  src(from, std::ios::binary);
-    std::ofstream  dst(to,   std::ios::binary);
+    std::ifstream src(from, std::ios::binary);
+    std::ofstream dst(to,   std::ios::binary);
     dst << src.rdbuf();
 
     return COPY_SUCCESS;
+}
+
+int CheckBackupsAmount() {
+    return 0;
 }
 
 int CreateBackup(std::string *ret) {
@@ -154,9 +169,31 @@ int CreateBackup(std::string *ret) {
 
     if (_mkdir(backuppath.c_str()) != 0)
         quit(ERR_BACKUP_CANT_CREATE_DIR);
+    
+    std::ofstream delfile (backuppath + "\\" + DELETEFILE);
+    if (delfile.is_open()) {
+        delfile << deleteText(std::to_string(sett::limit));
+        delfile.close();
+    } else quit(ERR_BACKUP_CANT_CREATE_DEL_FILE);
 
-    //CopyFile(ccll, std::dest + "\\CCLocalLevels.dat");
+    CopyFile(ccll, backuppath + "\\CCLocalLevels.dat");
+    CopyFile(ccgm, backuppath + "\\CCGameManager.dat");
 
+    /*
+    if (sett::compress) {
+        std::ifstream gmf(backuppath + "\\CCLocalLevels.dat");
+        std::ifstream llf(backuppath + "\\CCGameManager.dat");
+
+        zipper::Zipper zipper(backuppath + "." + sett::compressed_ext);
+        zipper.add(gmf, "CCGameManager.dat");
+        zipper.add(llf, "CCLocalLevels.dat");
+        zipper.close();
+
+        std::system(("rd /s /q " + backuppath).c_str());
+
+        *ret = backuppath + "." + sett::compressed_ext;
+    } else */
+    
     *ret = backuppath;
 
     return BACKUP_SUCCESS;
@@ -192,7 +229,6 @@ void GDOnCloseBackuper() {
                         default:
                             quit(ERR_UNKNOWN);
                     }
-                    makeOnNext = 0;
                 }
                 break;
             default:
@@ -232,6 +268,7 @@ int main() {
                 case CHECKRATE:     sett::gd_check_rate = std::stoi(val); break;
                 case DEBUGMODE:     sett::debug = val == "1"; break;
                 case CHECKLENGTH:   sett::gd_check_length = std::stoi(val); break;
+                case COMPEXT:       sett::compressed_ext = val; break;
             }
         }
         settings_file.close();
@@ -262,16 +299,6 @@ int main() {
         std::cout << "debug: "              << sett::debug << std::endl << std::endl;
     } else {
         std::cout << "Backups directory: " << sett::dest << std::endl << std::endl;
-    }
-
-    std::cout << "Creating backup..." << std::endl;
-    std::string succ;
-    switch (CreateBackup(&succ)) {
-        case BACKUP_SUCCESS:
-            std::cout << "Succesfully made backup!" << std::endl << succ << std::endl;
-            break;
-        default:
-            quit(ERR_UNKNOWN);
     }
 
     if (sett::create_on_gd_close) {
