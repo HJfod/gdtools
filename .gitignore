@@ -5,3 +5,4 @@ userdata.gdt
 .vscode/
 Autobackup/.autobackup
 Autobackup/.errlog
+auth.json

@@ -831,19 +831,30 @@ namespace gdtools {
                 return true;
             }
 
+            private static long GetDirSize(string _path) {
+                long res = 0;
+                foreach (string f in Directory.GetFiles(_path))
+                    res += (new FileInfo(f)).Length;
+                foreach (string d in Directory.GetDirectories(_path))
+                    res += GetDirSize(Path.Join(_path, d));
+                return res;
+            }
+
             public static List<dynamic> GetBackups() {
                 List<dynamic> res = new List<dynamic>{};
                 foreach (string file in Directory.GetDirectories(_BackupDirectory)) {
                     if (File.Exists($"{file}\\CCLocalLevels.dat") || File.Exists($"{file}\\CCGameManager.dat")) {
                         res.Add(new {
-                            Name = file.Substring(file.LastIndexOf("\\") + 1)
+                            Name = file.Substring(file.LastIndexOf("\\") + 1),
+                            Size = GetDirSize(file)
                         });
                     }
                 }
                 foreach (string file in Directory.GetFiles(_BackupDirectory)) {
                     if (file.EndsWith($".{Ext.Backup}")) {
                         res.Add(new {
-                            Name = file.Substring(file.LastIndexOf("\\") + 1)
+                            Name = file.Substring(file.LastIndexOf("\\") + 1),
+                            Size = (new FileInfo(file)).Length
                         });
                     }
                 }

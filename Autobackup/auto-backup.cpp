@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -154,6 +155,8 @@ int CopyFile(std::string from, std::string to) {
 }
 
 int CheckBackupsAmount() {
+    
+
     return 0;
 }
 

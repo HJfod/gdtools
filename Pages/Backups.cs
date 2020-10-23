@@ -10,6 +10,7 @@ namespace gdtools {
         public class Backups : TableLayoutPanel {
             Elem.Select BackupSelect;
             Elem.Text BackupPath;
+            Elem.Text BackupsSize;
 
             public Backups() {
                 this.Name = "Backups";
@@ -84,6 +85,7 @@ namespace gdtools {
                 BackupSelect.DoubleClick += ViewBackup;
 
                 BackupPath = new Elem.Text();
+                BackupsSize = new Elem.Text();
 
                 RefreshBackupList();
 
@@ -92,6 +94,8 @@ namespace gdtools {
                 BackupSelect.ContextMenuStrip = CM;
 
                 this.Controls.Add(BackupSelect);
+
+                this.Controls.Add(BackupsSize);
 
                 this.Controls.Add(new Elem.Div(new Control[] {
                     new Elem.But("View", ViewBackup, "This button shows info about the backup. (You can do the same by double-clicking a backup on the list)"),
@@ -190,6 +194,8 @@ namespace gdtools {
                 }));
                 this.Controls.Add(new Elem.BigNewLine());
                 this.Controls.Add(new Elem.But("Help", (s, e) => Pages.SettingPage.ShowHelp("backups")));
+                //this.Controls.Add(new Elem.BigNewLine());
+                //this.Controls.Add(new Elem.But("Link backups to Google Drive"));
             }
 
             public void ImportBackup(string file) {
@@ -202,13 +208,16 @@ namespace gdtools {
             }
 
             public void RefreshBackupList() {
-                BackupSelect.Items.Clear();
+                this.BackupSelect.Items.Clear();
 
+                long sz = 0;
                 foreach (dynamic lvl in GDTools.Backups.GetBackups()) {
-                    BackupSelect.AddItem(lvl.Name);
+                    this.BackupSelect.AddItem(lvl.Name);
+                    sz += lvl.Size;
                 }
+                this.BackupsSize.Text = $"Total size: {sz / 1000000} mb";
 
-                BackupPath.Text = $"Current folder: {GDTools._BackupDirectory}";
+                this.BackupPath.Text = $"Current folder: {GDTools._BackupDirectory}";
             }
         }
     }

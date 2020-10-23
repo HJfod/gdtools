@@ -348,8 +348,15 @@ namespace gdtools {
 
                             // things you need to affect: color triggers, pulse triggers, literally every trigger that takes groups
 
-                            foreach (dynamic obj in GDTools.GetObjectsByKey(newData, "ARR_21_22_57"))
-                                Console.WriteLine(obj.Data);
+                            string new_data = "";
+                            foreach (dynamic obj in GDTools.GetObjectsByKey(newData))
+                                if (GDTools.GetObjectKey(obj.Data, "57") != null) {
+                                    int o = Int32.Parse(GDTools.GetObjectKey(obj.Data, "57"));
+                                    string n = obj.Data;
+                                    if (Int32.Parse(grang.Split("-")[0] < o && o < Int32.Parse(grang.Split("-")[1]))
+                                        n = GDTools.SetObjectKey(obj.Data, "57", (o + Int32.Parse(goff)).ToString());
+                                    new_data += n + ";";
+                                } else new_data += obj.Data + ";";
                         } catch (Exception err) {
                             MessageBox.Show($"Error: {err}", "Error");
                         }
